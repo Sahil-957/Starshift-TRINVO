@@ -32,6 +32,22 @@ export type ProductImage = {
   kind: "main" | "angle" | "detail" | "lifestyle";
 };
 
+/**
+ * The one barrel every design is printed on: Qikink's Tumbler Bottle.
+ * Source: https://qikink.com/custom/drinkware/tumbler-bottle/
+ *
+ * There is a single size. Qikink states 20 oz and does not publish a ml
+ * figure, dimensions or care instructions — 591 ml is the conversion, and
+ * anything not listed here is not yet confirmed by the supplier.
+ */
+export const barrel = {
+  capacity: "20 oz",
+  capacityMl: 591,
+  material: "304 stainless, double-wall vacuum insulated",
+  lid: "Splash-proof lid with a reusable metal straw",
+  print: "Sublimation, OEKO-TEX certified inks",
+} as const;
+
 export type Product = {
   slug: string;
   name: string;
@@ -40,15 +56,14 @@ export type Product = {
   /** Editorial paragraph for the product page */
   description: string;
   price: number;
-  capacityMl: number;
-  /** How the artwork is applied to the barrel */
-  print: string;
   /** Shots for this product. Empty until photography lands (phase 2). */
   images: ProductImage[];
   /** Tints the key light behind the product so each frame is lit differently */
   tone: string;
   /** Drives this design's UI colour: index, swatches, hover bar, chips */
   accent: string;
+  /** Who makes and ships it — keys into `data/policy.ts`. Defaults to Qikink. */
+  fulfilment?: string;
   /** Three colours pulled from the artwork, shown as swatches on the card */
   palette: [string, string, string];
   /** Quiz tags — see lib/quiz.ts */
@@ -64,13 +79,11 @@ export const products: Product[] = [
     description:
       "The quietest design we make: a single graphite field broken by one hairline. Drawn to be the thing you stop noticing by the second week, which is the highest compliment a desk object can earn.",
     price: 1490,
-    capacityMl: 600,
-    print: "Full-wrap, matte",
     images: [],
     tone: "#9fa6b2",
     accent: "#9aa0a8",
     palette: ["#17171a", "#4a4a52", "#9aa0a8"],
-    traits: ["minimal", "desk", "dark", "large", "mono"],
+    traits: ["minimal", "desk", "dark", "mono"],
     featured: true,
   },
   {
@@ -80,13 +93,11 @@ export const products: Product[] = [
     description:
       "Layered dune ridges in bone, sand and a single burnt line, printed so the lightest tone sits almost flush with the barrel. The design we reach for when the tumbler sits next to paper, linen and light wood.",
     price: 1490,
-    capacityMl: 600,
-    print: "Full-wrap, matte",
     images: [],
     tone: "#e8d9c0",
     accent: "#c08a4e",
     palette: ["#efe5d4", "#d2bc96", "#a8703a"],
-    traits: ["minimal", "desk", "light", "large", "gift", "earth"],
+    traits: ["minimal", "desk", "light", "gift", "earth"],
     featured: true,
   },
   {
@@ -96,13 +107,11 @@ export const products: Product[] = [
     description:
       "Our loudest design. A terracotta field with a brass seam running the full height of the barrel, drawn to catch the light at one angle and disappear at every other. Built to be the single bright object on a desk of neutrals.",
     price: 1590,
-    capacityMl: 600,
-    print: "Full-wrap, gloss",
     images: [],
     tone: "#c87a46",
     accent: "#d9733c",
     palette: ["#8f3f1e", "#c87a46", "#e8b878"],
-    traits: ["bold", "desk", "warm", "large", "gift", "earth"],
+    traits: ["bold", "desk", "warm", "gift", "earth"],
     featured: true,
   },
   {
@@ -112,13 +121,11 @@ export const products: Product[] = [
     description:
       "Contour lines lifted from a survey map, redrawn in dusty olive over bone. Sits somewhere between field gear and tableware, which is why it tends to end up in a backpack side pocket rather than on a desk.",
     price: 1490,
-    capacityMl: 600,
-    print: "Full-wrap, matte",
     images: [],
     tone: "#8d9a7f",
     accent: "#8fa070",
     palette: ["#4e5a44", "#8d9a7f", "#d6cdb6"],
-    traits: ["outdoors", "travel", "large", "bold", "earth"],
+    traits: ["outdoors", "travel", "bold", "earth"],
     featured: true,
   },
   {
@@ -128,13 +135,11 @@ export const products: Product[] = [
     description:
       "A deep indigo wash printed thin enough that the brushed stainless reads through it, so the barrel shifts between blue and bare metal depending on the room. The most forgiving design in the range over a long life.",
     price: 1690,
-    capacityMl: 600,
-    print: "Translucent wrap over brushed steel",
     images: [],
     tone: "#8fa4d4",
     accent: "#6f86c4",
     palette: ["#1e2738", "#44557c", "#c4cbd4"],
-    traits: ["minimal", "travel", "dark", "large", "gift", "cool"],
+    traits: ["minimal", "travel", "dark", "gift", "cool"],
     featured: true,
   },
   {
@@ -144,44 +149,38 @@ export const products: Product[] = [
     description:
       "Our own prism refracted across the full wrap — violet through cobalt into a single rose edge. The one design in the range that behaves like a poster rather than a finish, and the one people pick up first.",
     price: 1690,
-    capacityMl: 600,
-    print: "Full-wrap, gloss",
     images: [],
     tone: "#8a6cf0",
     accent: "#8a6cf0",
     palette: ["#3b2f8f", "#5f7fe0", "#d0507a"],
-    traits: ["bold", "desk", "large", "gift", "cool"],
+    traits: ["bold", "desk", "gift", "cool"],
     featured: true,
   },
   {
     slug: "compact-noir",
     name: "Compact Noir",
-    tagline: "The 350 ml, in black and brass",
+    tagline: "Black, with a single brass rule",
     description:
-      "The small one. Same barrel geometry scaled down to fit a cup holder, a side pocket and most espresso machines, carrying a stripped-back black design with a single brass rule at the base.",
+      "The most stripped-back design in the range: a flat black field broken once, low on the barrel, by a brass line that catches the light when you turn it. Nothing else happens, which is the point.",
     price: 1290,
-    capacityMl: 350,
-    print: "Full-wrap, matte",
     images: [],
     tone: "#8a8275",
     accent: "#c9a86a",
     palette: ["#131110", "#3a332a", "#c9a86a"],
-    traits: ["minimal", "commute", "dark", "small", "mono"],
+    traits: ["minimal", "commute", "dark", "mono"],
   },
   {
     slug: "clay-commute",
     name: "Clay Commute",
-    tagline: "350 ml, warm clay, cup-holder ready",
+    tagline: "A clay gradient that deepens toward the base",
     description:
-      "The compact barrel carrying a soft clay gradient that runs darker toward the base. Sized around a car cup holder and a crowded metro grip, with the same press-fit lid as the rest of the range.",
+      "A soft clay wash that starts pale at the lip and runs darker the further down it goes, so the barrel reads heavier at the bottom than it is. Warm, matte and quiet enough to carry every day.",
     price: 1290,
-    capacityMl: 350,
-    print: "Full-wrap, matte",
     images: [],
     tone: "#c99a74",
     accent: "#d89a6e",
     palette: ["#8a5a3c", "#c08763", "#f0ddc4"],
-    traits: ["warm", "commute", "small", "gift", "earth"],
+    traits: ["warm", "commute", "gift", "earth"],
   },
 ];
 

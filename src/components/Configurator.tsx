@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import ProductFrame from "./ProductFrame";
 import Swatches from "./Swatches";
-import { formatPrice } from "@/data/products";
+import { barrel, formatPrice } from "@/data/products";
 import {
   matchedTraits,
   quizQuestions,
@@ -20,8 +20,6 @@ const traitCopy: Record<string, string> = {
   outdoors: "Built for outside",
   travel: "Travels well",
   gift: "Gifts well",
-  small: "350 ml",
-  large: "600 ml",
   dark: "Dark ground",
   light: "Light ground",
   warm: "Warm tones",
@@ -158,7 +156,7 @@ export default function Configurator() {
                     <p className="mt-3 text-[15px] text-ash">{result.tagline}</p>
                     <div className="mt-5 flex flex-wrap items-center gap-4">
                       <p className="label tabular-nums text-chalk">
-                        {formatPrice(result.price)} · {result.capacityMl} ml
+                        {formatPrice(result.price)} · {barrel.capacity}
                       </p>
                       <Swatches palette={result.palette} />
                     </div>

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import ProductFrame from "./ProductFrame";
 import Swatches from "./Swatches";
-import { formatPrice, type Product } from "@/data/products";
+import { barrel, formatPrice, type Product } from "@/data/products";
 
 export default function ProductCard({
   product,
@@ -41,7 +41,7 @@ export default function ProductCard({
       </div>
       <p className="mt-2 text-[14px] leading-snug text-ash">{product.tagline}</p>
       <p className="label mt-3 text-dim">
-        {product.capacityMl} ml · {product.print}
+        {barrel.capacity} · {barrel.print}
       </p>
     </Link>
   );

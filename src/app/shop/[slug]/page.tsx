@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import ProductGallery from "@/components/ProductGallery";
+import ReturnsSummary from "@/components/ReturnsSummary";
 import ProductCard from "@/components/ProductCard";
 import Swatches from "@/components/Swatches";
-import { formatPrice, getProduct, products } from "@/data/products";
+import { barrel, formatPrice, getProduct, products } from "@/data/products";
 
 export function generateStaticParams() {
   return products.map((p) => ({ slug: p.slug }));
@@ -63,8 +64,10 @@ export default async function ProductPage({ params }: PageProps<"/shop/[slug]">)
 
           <dl className="mt-12 border-t hairline">
             {[
-              ["Volume", `${product.capacityMl} ml`],
-              ["Surface", product.print],
+              ["Capacity", `${barrel.capacity} (${barrel.capacityMl} ml)`],
+              ["Body", barrel.material],
+              ["Lid", barrel.lid],
+              ["Surface", barrel.print],
               ["Artwork", "Drawn in-house"],
               ["Origin", "India"],
             ].map(([key, value]) => (
@@ -93,6 +96,8 @@ export default async function ProductPage({ params }: PageProps<"/shop/[slug]">)
             Ordering is not live yet. Specifications on this page are
             provisional until the production run is confirmed.
           </p>
+
+          <ReturnsSummary fulfilment={product.fulfilment} />
         </div>
       </div>
 

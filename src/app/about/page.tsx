@@ -27,7 +27,7 @@ const chapters = [
   },
   {
     heading: "After you buy it",
-    body: "A tumbler is a thing you use twice a day for years, so the boring parts matter: a 12-month warranty on manufacturing defects, a 7-day return window if the design reads differently in your hand, a care guide that tells you plainly what will ruin the print, and a person who answers the email.",
+    body: "A tumbler is a thing you use twice a day for years, so the boring parts matter: a fault reported within 7 days gets remade, a care guide that tells you plainly what will ruin the print, and a person who answers the email. We have not confirmed a commercial warranty with our manufacturer, so we do not advertise one — your rights under consumer law are a separate thing and they stand regardless.",
   },
 ];
 

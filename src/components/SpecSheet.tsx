@@ -17,28 +17,19 @@ const groups: { title: string; rows: [string, string][] }[] = [
     rows: [
       ["Body", "304 stainless, double wall"],
       ["Insulation", "Sealed vacuum gap"],
-      ["Interior", "Bare steel, no inner coating"],
-      ["Lid", "Press-fit, sliding sip closure"],
-      ["Gasket", "Food-grade silicone, removable"],
-      ["Surface", "Full-wrap print, matte or gloss"],
+      ["Lid", "Splash-proof, push-on"],
+      ["Straw", "Reusable metal, included"],
+      ["Surface", "Sublimation, full wrap"],
+      ["Inks", "OEKO-TEX certified, fade-proof"],
     ],
   },
   {
     title: "Size and fit",
     rows: [
-      ["Volume", "350 ml / 600 ml"],
-      ["Base", "Narrow enough to clear a keyboard tray"],
-      ["Cup holder", "Both sizes fit a standard car holder"],
-      ["Opening", "Wide enough for ice and a bottle brush"],
-    ],
-  },
-  {
-    title: "In use",
-    rows: [
-      ["Hot and cold retention", "Not published until lab-tested"],
-      ["Leak resistance", "Holds upright in a bag, closure shut"],
-      ["Outer wall", "Stays dry — a vacuum wall does not sweat"],
-      ["Washing", "Hand wash only; never the dishwasher"],
+      ["Capacity", "20 oz (591 ml)"],
+      ["Sizes", "One — there is no second size"],
+      ["Height and diameter", "Not published by the supplier yet"],
+      ["Weight", "Not published by the supplier yet"],
     ],
   },
   {
@@ -46,17 +37,10 @@ const groups: { title: string; rows: [string, string][] }[] = [
     rows: [
       ["Artwork", "Drawn in-house, one design per barrel"],
       ["Origin", "Made in India"],
-      ["Warranty", "12 months on manufacturing defects"],
-      ["Returns", "7 days, unused and boxed"],
+      ["Made", "To order, after you buy it"],
+      ["Faults", "Reportable within 7 days of delivery"],
     ],
   },
-];
-
-const useCases = [
-  ["08:10", "The commute", "Fits a car cup holder and a crowded metro grip."],
-  ["10:30", "The desk", "Narrow base, so it clears a keyboard tray."],
-  ["18:45", "The session", "One fill covers a full class or a long walk."],
-  ["Any", "The gift", "Arrives as an object someone did not have to choose."],
 ];
 
 export default function SpecSheet() {
@@ -72,7 +56,7 @@ export default function SpecSheet() {
           label="Specification"
           accent="var(--color-cobalt)"
           title="What is actually in your hand"
-          lede="Everything that matters about a tumbler is decided before any artwork goes on it — the steel, the vacuum seal, how the lid seats, whether it fits where you put it. The barrel is the same under every design."
+          lede="Everything that matters about a tumbler is decided before any artwork goes on it — the steel, the vacuum seal, how the lid seats. There is one barrel at one size, and it is identical under every design."
         />
 
         <div className="mt-16 grid gap-12 lg:grid-cols-[1fr_1.15fr] lg:gap-20">
@@ -103,30 +87,12 @@ export default function SpecSheet() {
               </Reveal>
             ))}
 
-            <Reveal delay={120} className="mt-14">
-              <p className="label text-dim">A day with it</p>
-              <ul className="mt-6 border-t hairline">
-                {useCases.map(([time, place, note]) => (
-                  <li
-                    key={place}
-                    className="grid grid-cols-[auto_1fr] gap-x-5 gap-y-1 border-b hairline py-5 sm:grid-cols-[4rem_9rem_1fr]"
-                  >
-                    <span className="label tabular-nums text-cobalt">{time}</span>
-                    <span className="text-[15px] text-chalk">{place}</span>
-                    <span className="col-span-2 text-[14px] leading-relaxed text-ash sm:col-span-1">
-                      {note}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </Reveal>
-
             <Reveal delay={160} className="mt-14 border-t hairline pt-8">
               <p className="label text-dim">The practical side</p>
               <ul className="mt-5 flex flex-wrap gap-x-7 gap-y-3">
                 {[
                   ["/support/shipping", "Shipping"],
-                  ["/support/returns", "Returns & warranty"],
+                  ["/support/returns", "Returns & refunds"],
                   ["/support/care", "Care guide"],
                   ["/support/faq", "FAQ"],
                 ].map(([href, label]) => (

@@ -6,9 +6,11 @@ const columns = [
     title: "Designs",
     links: [
       { href: "/shop", label: "All designs" },
-      { href: "/#range", label: "This season" },
+      { href: "/collections", label: "Collections" },
+      { href: "/collections/minimal", label: "Minimal" },
+      { href: "/collections/bold", label: "Bold" },
+      { href: "/collections/gifts", label: "Gifts" },
       { href: "/#configurator", label: "Find your design" },
-      { href: "/#spec", label: "Specification" },
     ],
   },
   {
@@ -24,7 +26,7 @@ const columns = [
     title: "Support",
     links: [
       { href: "/support/shipping", label: "Shipping" },
-      { href: "/support/returns", label: "Returns & warranty" },
+      { href: "/support/returns", label: "Returns & refunds" },
       { href: "/support/care", label: "Care" },
       { href: "/support/bulk", label: "Bulk & corporate" },
       { href: "/support/faq", label: "FAQ" },

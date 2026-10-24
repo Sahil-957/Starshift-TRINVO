@@ -22,7 +22,7 @@ export const quizQuestions: QuizQuestion[] = [
     caption: "Be honest — the answer is usually one place.",
     options: [
       { id: "desk", label: "On a desk", hint: "Beside a keyboard, refilled twice a day", traits: ["desk", "minimal"] },
-      { id: "commute", label: "In a bag or cup holder", hint: "Metro, car, the walk between both", traits: ["commute", "small"] },
+      { id: "commute", label: "In a bag or cup holder", hint: "Metro, car, the walk between both", traits: ["commute"] },
       { id: "outdoors", label: "Outside", hint: "Trails, sidelines, long weekends", traits: ["outdoors", "travel"] },
       { id: "gift", label: "Someone else's hands", hint: "It is a gift, and it has to land", traits: ["gift", "bold"] },
     ],
@@ -30,20 +30,11 @@ export const quizQuestions: QuizQuestion[] = [
   {
     id: "volume",
     prompt: "How loud should the design be?",
-    caption: "The barrel is identical across the range. Only the artwork changes.",
+    caption: "One barrel, one size, across the whole range. Only the artwork changes.",
     options: [
       { id: "quiet", label: "Nearly invisible", hint: "One field, one line, nothing else", traits: ["minimal", "dark"] },
       { id: "warm", label: "Soft and textural", hint: "Layered tones you notice up close", traits: ["warm", "light"] },
       { id: "loud", label: "Unmissable", hint: "Reads like a poster from across the room", traits: ["bold"] },
-    ],
-  },
-  {
-    id: "size",
-    prompt: "How much do you actually drink?",
-    caption: "Most people overestimate. Pick the smaller one if unsure.",
-    options: [
-      { id: "small", label: "A cup at a time", hint: "350 ml — refills often", traits: ["small", "commute"] },
-      { id: "large", label: "Fill it and forget it", hint: "600 ml — one trip to the tap", traits: ["large"] },
     ],
   },
   {

@@ -53,9 +53,9 @@ export default function Manifesto() {
             </p>
             <p className="text-[15px] leading-relaxed text-ash">
               The rest is the unglamorous half: 304 stainless, a vacuum wall
-              that does not sweat, a lid you can strip and wash, a warranty
-              that covers the parts that actually fail, and a spec sheet that
-              stays quiet about anything we have not measured.
+              that does not sweat, a splash-proof lid and a metal straw in the
+              box, a fault process that does not make you argue, and a spec
+              sheet that stays quiet about anything we have not measured.
             </p>
           </div>
         </Reveal>

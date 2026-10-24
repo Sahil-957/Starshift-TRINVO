@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import CollectionBar from "@/components/CollectionBar";
 import PageHeader from "@/components/PageHeader";
 import ProductCard from "@/components/ProductCard";
 import Reveal from "@/components/Reveal";
@@ -6,7 +7,7 @@ import { products } from "@/data/products";
 
 export const metadata: Metadata = {
   title: "Designs",
-  description: "Every TINVO design, in two sizes.",
+  description: "Every TINVO design, on the one 20 oz stainless barrel.",
 };
 
 export default function ShopPage() {
@@ -16,10 +17,12 @@ export default function ShopPage() {
         index="01"
         label={`${products.length} designs`}
         title="Every design"
-        lede="One barrel geometry, one set of specs, and eight different pieces of artwork printed full-wrap across it."
+        lede="One 20 oz barrel, one set of specs, and eight different pieces of artwork sublimated full-wrap across it."
       />
       <section className="mx-auto max-w-[1500px] px-5 pb-24 sm:px-8 lg:pb-32">
-        <ul className="grid grid-cols-2 gap-x-5 gap-y-12 lg:grid-cols-4 lg:gap-x-6">
+        <CollectionBar />
+
+        <ul className="mt-14 grid grid-cols-2 gap-x-5 gap-y-12 lg:grid-cols-4 lg:gap-x-6">
           {products.map((product, i) => (
             <Reveal as="li" key={product.slug} delay={(i % 4) * 60}>
               <ProductCard

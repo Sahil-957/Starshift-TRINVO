@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRef } from "react";
 import Swatches from "./Swatches";
-import { formatPrice, getProduct, products, siteImages } from "@/data/products";
+import { barrel, formatPrice, getProduct, products, siteImages } from "@/data/products";
 
 const lead = getProduct("prism")!;
 
@@ -82,10 +82,10 @@ export default function Hero() {
             </h1>
 
             <p className="mt-8 max-w-md text-[16px] leading-relaxed text-ash">
-              One 304 stainless barrel, double-walled and built to last, in two
-              sizes that fit a cup holder and a keyboard tray. Then{" "}
-              {products.length} original designs printed full-wrap across it,
-              drawn in-house rather than picked off a colour chart.
+              One {barrel.capacity} barrel — 304 stainless, double-wall
+              vacuum, splash-proof lid, metal straw in the box. Then{" "}
+              {products.length} original designs sublimated full-wrap across
+              it, drawn in-house rather than picked off a colour chart.
             </p>
 
             <div className="mt-9 flex flex-wrap items-center gap-3">
@@ -139,7 +139,7 @@ export default function Hero() {
           </div>
           <div className="flex items-baseline gap-2">
             <dt className="label text-dim">Vol</dt>
-            <dd className="label text-chalk">{lead.capacityMl} ml</dd>
+            <dd className="label text-chalk">{barrel.capacity}</dd>
           </div>
           <div className="flex items-baseline gap-2">
             <dt className="label text-dim">From</dt>

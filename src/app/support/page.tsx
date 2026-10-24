@@ -7,7 +7,7 @@ import { supportPages } from "@/data/support";
 export const metadata: Metadata = {
   title: "Support",
   description:
-    "Shipping, returns and warranty, care instructions, bulk orders and answers to the questions we actually get.",
+    "Shipping, returns and refunds, care instructions, bulk orders and answers to the questions we actually get.",
 };
 
 export default function SupportPage() {

@@ -5,7 +5,9 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 const links = [
+  { href: "/", label: "Home" },
   { href: "/shop", label: "Range" },
+  { href: "/collections", label: "Collections" },
   { href: "/#configurator", label: "Configurator" },
   { href: "/#spec", label: "Spec" },
   { href: "/about", label: "Studio" },
@@ -50,12 +52,12 @@ export default function Nav() {
             priority
             className="h-[17px] w-auto sm:h-[19px]"
           />
-          <span className="label hidden border-l hairline pl-4 text-dim xl:block">
+          <span className="label hidden border-l hairline pl-4 text-dim 2xl:block">
             Art you can carry
           </span>
         </Link>
 
-        <ul className="hidden items-center gap-10 lg:flex">
+        <ul className="hidden items-center gap-6 lg:flex xl:gap-8">
           {links.map((link) => (
             <li key={link.href}>
               <Link href={link.href} className="wipe label text-ash hover:text-chalk">
