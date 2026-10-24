@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  /* Near-black ground; chalk is the TRINVO mint, straight off the logo */
+  /* Near-black ground; chalk is the TINVO mint, straight off the logo */
   --color-void: #08080a;
   --color-panel: #0e0e11;
   --color-raise: #16161a;

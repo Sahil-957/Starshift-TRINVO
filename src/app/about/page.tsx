@@ -5,7 +5,7 @@ import Reveal from "@/components/Reveal";
 
 export const metadata: Metadata = {
   title: "Studio",
-  description: "Why TRINVO makes one barrel and puts all of its effort into the artwork.",
+  description: "Why TINVO makes one barrel and puts all of its effort into the artwork.",
 };
 
 const chapters = [
@@ -30,7 +30,7 @@ export default function AboutPage() {
         index="01"
         label="Studio"
         title="We only make one thing"
-        lede="TRINVO is a tumbler brand with a deliberately narrow product line and all of its effort pointed at the artwork."
+        lede="TINVO is a tumbler brand with a deliberately narrow product line and all of its effort pointed at the artwork."
       />
 
       <section className="mx-auto max-w-[1500px] px-5 pb-24 sm:px-8 lg:pb-32">

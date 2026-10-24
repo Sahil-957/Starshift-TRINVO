@@ -3,18 +3,18 @@ import PageHeader from "@/components/PageHeader";
 
 export const metadata: Metadata = {
   title: "Contact",
-  description: "Reach TRINVO about orders, bulk enquiries and custom print.",
+  description: "Reach TINVO about orders, bulk enquiries and custom print.",
 };
 
 const routes = [
   {
     label: "General & orders",
-    value: "hello@trinvo.store",
+    value: "hello@tinvo.store",
     note: "Anything about the range, sizing or shipping.",
   },
   {
     label: "Bulk & corporate",
-    value: "studio@trinvo.store",
+    value: "studio@tinvo.store",
     note: "Team gifting and larger orders from the existing range.",
   },
 ];

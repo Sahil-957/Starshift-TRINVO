@@ -50,7 +50,7 @@ export default function Reviews() {
                 </h3>
                 <p className="mt-6 text-[15px] leading-relaxed text-ash">
                   This space is reserved for people who have actually bought a
-                  TRINVO barrel. Every review published here will be tied to
+                  TINVO barrel. Every review published here will be tied to
                   a verified order, with the colourway and size it was written
                   about. The first ones go up as soon as the first orders land.
                 </p>

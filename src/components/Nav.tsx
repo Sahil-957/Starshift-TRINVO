@@ -38,12 +38,12 @@ export default function Nav() {
       <nav className="mx-auto flex h-16 max-w-[1500px] items-center justify-between gap-6 px-5 sm:px-8">
         <Link
           href="/"
-          aria-label="TRINVO — art you can carry, home"
+          aria-label="TINVO — art you can carry, home"
           className="flex shrink-0 items-center gap-4"
         >
           <Image
-            src="/trinvo-wordmark.svg"
-            alt="TRINVO"
+            src="/tinvo-wordmark.svg"
+            alt="TINVO"
             width={201}
             height={48}
             priority

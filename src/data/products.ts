@@ -1,7 +1,7 @@
 /**
- * Central catalogue for the TRINVO storefront.
+ * Central catalogue for the TINVO storefront.
  *
- * Each entry is a DESIGN, not a colour option. TRINVO sells its own
+ * Each entry is a DESIGN, not a colour option. TINVO sells its own
  * original artwork printed on one stainless barrel. Customer personalisation
  * is deliberately not part of the storefront yet.
  *

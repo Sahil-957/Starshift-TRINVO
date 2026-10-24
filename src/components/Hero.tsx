@@ -113,7 +113,7 @@ export default function Hero() {
                 style={{ background: `color-mix(in oklab, ${lead.accent} 34%, transparent)` }}
               />
               <Image
-                src="/trinvo-mark.svg"
+                src="/tinvo-mark.svg"
                 alt=""
                 width={254}
                 height={237}

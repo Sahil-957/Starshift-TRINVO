@@ -38,8 +38,8 @@ export default function Footer() {
         <div className="grid gap-14 lg:grid-cols-[1.3fr_2fr]">
           <div>
             <Image
-              src="/trinvo-lockup.svg"
-              alt="TRINVO"
+              src="/tinvo-lockup.svg"
+              alt="TINVO"
               width={254}
               height={314}
               className="h-auto w-[104px] max-w-full sm:w-[120px]"
@@ -73,7 +73,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-20 flex flex-col gap-4 border-t hairline pt-7 sm:flex-row sm:items-center sm:justify-between">
-          <p className="label text-dim">© {new Date().getFullYear()} TRINVO</p>
+          <p className="label text-dim">© {new Date().getFullYear()} TINVO</p>
           <p className="label text-dim">Printed to order · India</p>
         </div>
       </div>

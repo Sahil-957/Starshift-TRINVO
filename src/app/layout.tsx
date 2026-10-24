@@ -19,15 +19,15 @@ const mono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "TRINVO — Art you can carry",
-    template: "%s · TRINVO",
+    default: "TINVO — Art you can carry",
+    template: "%s · TINVO",
   },
   description:
     "Art you can carry. Eight original designs, drawn in-house and printed full-wrap on one double-wall stainless barrel. Made in India.",
   openGraph: {
-    title: "TRINVO — Art you can carry",
+    title: "TINVO — Art you can carry",
     description: "Art you can carry — eight original designs on one double-wall stainless barrel.",
-    siteName: "TRINVO",
+    siteName: "TINVO",
     type: "website",
   },
 };

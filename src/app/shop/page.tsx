@@ -6,7 +6,7 @@ import { products } from "@/data/products";
 
 export const metadata: Metadata = {
   title: "Designs",
-  description: "Every TRINVO design, in two sizes.",
+  description: "Every TINVO design, in two sizes.",
 };
 
 export default function ShopPage() {

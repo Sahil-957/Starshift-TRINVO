@@ -45,7 +45,7 @@ export default function Manifesto() {
         <Reveal delay={160}>
           <div className="mt-12 grid max-w-3xl gap-8 border-t hairline pt-8 sm:grid-cols-2">
             <p className="text-[15px] leading-relaxed text-ash">
-              TRINVO makes a single barrel properly — stainless,
+              TINVO makes a single barrel properly — stainless,
               double-walled, honest geometry — and then treats the surface as
               the real work. {products.length} designs so far, each one drawn
               from scratch rather than pulled from a catalogue of stock

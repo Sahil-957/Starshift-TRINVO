@@ -1,6 +1,6 @@
-# TRINVO
+# TINVO
 
-Storefront for TRINVO — original designs on premium tumblers.
+Storefront for TINVO — original designs on premium tumblers.
 
 Next.js (App Router) · TypeScript · Tailwind CSS v4. No other runtime dependencies.
 
@@ -11,7 +11,7 @@ npm run typecheck
 npm run build
 ```
 
-TRINVO sells its own original artwork printed full-wrap on one stainless
+TINVO sells its own original artwork printed full-wrap on one stainless
 barrel. Customer personalisation is deliberately **not** part of this build —
 nothing in the UI offers it, and `src/data/products.ts` treats each entry as a
 finished design rather than a configurable blank.
@@ -65,9 +65,9 @@ retune that.
 | `src/components/ProductFrame.tsx` | The dark plate + key light every product sits in |
 | `src/data/products.ts` | Single source of truth for the catalogue and reviews |
 | `src/lib/quiz.ts` | Configurator questions and scoring |
-| `public/trinvo-wordmark.svg` | Horizontal wordmark (brand mint — dark grounds only) |
-| `public/trinvo-lockup.svg` | Stacked mark + wordmark, used in the footer |
-| `public/trinvo-mark.svg` | Symbol only; also the site icon via `src/app/icon.svg` |
+| `public/tinvo-wordmark.svg` | Horizontal wordmark (brand mint — dark grounds only) |
+| `public/tinvo-lockup.svg` | Stacked mark + wordmark, used in the footer |
+| `public/tinvo-mark.svg` | Symbol only; also the site icon via `src/app/icon.svg` |
 
 ## Before launch
 
