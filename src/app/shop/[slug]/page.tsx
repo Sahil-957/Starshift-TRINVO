@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import ProductFrame from "@/components/ProductFrame";
+import ProductGallery from "@/components/ProductGallery";
 import ProductCard from "@/components/ProductCard";
 import Swatches from "@/components/Swatches";
 import { formatPrice, getProduct, products } from "@/data/products";
@@ -29,12 +29,9 @@ export default async function ProductPage({ params }: PageProps<"/shop/[slug]">)
   return (
     <>
       <div className="mx-auto grid max-w-[1500px] gap-10 px-5 pb-20 pt-10 sm:px-8 lg:grid-cols-2 lg:gap-16 lg:pb-28">
-        <ProductFrame
+        <ProductGallery
           product={product}
-          className="aspect-[4/5] lg:sticky lg:top-24 lg:self-start"
-          sizes="(max-width: 1024px) 92vw, 46vw"
-          priority
-          lightY="30%"
+          className="lg:sticky lg:top-24 lg:self-start"
         />
 
         <div>

@@ -82,9 +82,10 @@ export default function Hero() {
             </h1>
 
             <p className="mt-8 max-w-md text-[16px] leading-relaxed text-ash">
-              {products.length} original designs, drawn in-house and printed on
-              one stainless barrel. Not a colour chart — artwork you would put
-              on a wall, on something you actually use.
+              One 304 stainless barrel, double-walled and built to last, in two
+              sizes that fit a cup holder and a keyboard tray. Then{" "}
+              {products.length} original designs printed full-wrap across it,
+              drawn in-house rather than picked off a colour chart.
             </p>
 
             <div className="mt-9 flex flex-wrap items-center gap-3">

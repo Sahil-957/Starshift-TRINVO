@@ -21,6 +21,14 @@ const chapters = [
     heading: "Finished pieces, not blanks",
     body: "We are not asking you to decorate anything. Each design arrives complete, printed full-wrap, chosen the way you would choose a print for a wall. Personalisation may come later, but it is not what this range is for.",
   },
+  {
+    heading: "What we will not claim",
+    body: "No insulation figure until a lab gives us one. No drop rating we have not tested. The specification page says what the thing is made of and how it behaves, and goes quiet where we do not yet know — which is most of what separates an honest spec sheet from marketing copy.",
+  },
+  {
+    heading: "After you buy it",
+    body: "A tumbler is a thing you use twice a day for years, so the boring parts matter: a 12-month warranty on manufacturing defects, a 7-day return window if the design reads differently in your hand, a care guide that tells you plainly what will ruin the print, and a person who answers the email.",
+  },
 ];
 
 export default function AboutPage() {
@@ -30,7 +38,7 @@ export default function AboutPage() {
         index="01"
         label="Studio"
         title="We only make one thing"
-        lede="TINVO is a tumbler brand with a deliberately narrow product line and all of its effort pointed at the artwork."
+        lede="TINVO is a tumbler brand with a deliberately narrow product line: one barrel engineered properly, a range of original designs printed across it, and no claims we cannot back."
       />
 
       <section className="mx-auto max-w-[1500px] px-5 pb-24 sm:px-8 lg:pb-32">

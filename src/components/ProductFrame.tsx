@@ -1,8 +1,10 @@
 import Image from "next/image";
-import type { Product } from "@/data/products";
+import type { Product, ProductImage } from "@/data/products";
 
 type Props = {
   product: Product;
+  /** Which shot to render. Defaults to the product's lead image. */
+  image?: ProductImage;
   /** Tailwind aspect utility — frames are portrait by default */
   className?: string;
   sizes?: string;
@@ -14,11 +16,12 @@ type Props = {
 /**
  * Every design sits inside one of these: a dark plate lit by a key light in
  * the design's own tone plus a cold counter-light from the opposite corner.
- * When `product.image` is unset it renders a labelled empty plate instead of
- * a stand-in photo, so missing photography is obvious.
+ * With no photography yet (phase 2) it renders a labelled development
+ * placeholder instead of a stand-in photo, so a missing shot is obvious.
  */
 export default function ProductFrame({
   product,
+  image = product.images[0],
   className = "aspect-[4/5]",
   sizes = "(max-width: 768px) 90vw, 33vw",
   priority = false,
@@ -36,10 +39,10 @@ export default function ProductFrame({
     >
       <div aria-hidden="true" className="keylight absolute inset-0 z-0 opacity-80" />
 
-      {product.image ? (
+      {image ? (
         <Image
-          src={`/products/${product.image}`}
-          alt={`${product.name} — ${product.tagline}`}
+          src={`/products/${image.file}`}
+          alt={image.alt}
           fill
           sizes={sizes}
           priority={priority}
@@ -71,9 +74,9 @@ function EmptyPlate({ product }: { product: Product }) {
         className="absolute bottom-[14%] left-1/2 h-[14%] w-[62%] -translate-x-1/2 rounded-[50%] blur-xl"
         style={{ background: `color-mix(in oklab, ${product.accent} 26%, transparent)` }}
       />
-      <span className="label relative text-dim">Awaiting photography</span>
+      <span className="label relative text-dim">Placeholder — no photography</span>
       <span className="relative hidden font-mono text-[11px] leading-relaxed text-dim @min-[17rem]:block">
-        public/products/{product.slug}.jpg
+        public/products/{product.slug}-main.jpg
       </span>
     </div>
   );

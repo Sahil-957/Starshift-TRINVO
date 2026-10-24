@@ -23,10 +23,11 @@ const columns = [
   {
     title: "Support",
     links: [
-      { href: "/contact", label: "Shipping" },
-      { href: "/contact", label: "Returns" },
-      { href: "/contact", label: "Bulk & corporate" },
-      { href: "/contact", label: "Care" },
+      { href: "/support/shipping", label: "Shipping" },
+      { href: "/support/returns", label: "Returns & warranty" },
+      { href: "/support/care", label: "Care" },
+      { href: "/support/bulk", label: "Bulk & corporate" },
+      { href: "/support/faq", label: "FAQ" },
     ],
   },
 ];

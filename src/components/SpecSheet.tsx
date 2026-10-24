@@ -1,3 +1,4 @@
+import Link from "next/link";
 import ProductFrame from "./ProductFrame";
 import Reveal from "./Reveal";
 import SectionHead from "./SectionHead";
@@ -7,15 +8,48 @@ const subject = getProduct("midnight-steel")!;
 
 /**
  * Claims here are deliberately descriptive rather than numeric — no insulation
- * hours or drop ratings until they are lab-verified.
+ * hours or drop ratings until they are lab-verified. Dimensions marked
+ * provisional are confirmed against the supplier template before launch.
  */
-const spec = [
-  ["Wall", "Double-wall stainless, vacuum gap"],
-  ["Lid", "Press-fit, sliding sip closure"],
-  ["Surface", "Full-wrap print, matte or gloss"],
-  ["Artwork", "Drawn in-house, one design per barrel"],
-  ["Volume", "350 ml / 600 ml"],
-  ["Origin", "India"],
+const groups: { title: string; rows: [string, string][] }[] = [
+  {
+    title: "Materials",
+    rows: [
+      ["Body", "304 stainless, double wall"],
+      ["Insulation", "Sealed vacuum gap"],
+      ["Interior", "Bare steel, no inner coating"],
+      ["Lid", "Press-fit, sliding sip closure"],
+      ["Gasket", "Food-grade silicone, removable"],
+      ["Surface", "Full-wrap print, matte or gloss"],
+    ],
+  },
+  {
+    title: "Size and fit",
+    rows: [
+      ["Volume", "350 ml / 600 ml"],
+      ["Base", "Narrow enough to clear a keyboard tray"],
+      ["Cup holder", "Both sizes fit a standard car holder"],
+      ["Opening", "Wide enough for ice and a bottle brush"],
+    ],
+  },
+  {
+    title: "In use",
+    rows: [
+      ["Hot and cold retention", "Not published until lab-tested"],
+      ["Leak resistance", "Holds upright in a bag, closure shut"],
+      ["Outer wall", "Stays dry — a vacuum wall does not sweat"],
+      ["Washing", "Hand wash only; never the dishwasher"],
+    ],
+  },
+  {
+    title: "Behind it",
+    rows: [
+      ["Artwork", "Drawn in-house, one design per barrel"],
+      ["Origin", "Made in India"],
+      ["Warranty", "12 months on manufacturing defects"],
+      ["Returns", "7 days, unused and boxed"],
+    ],
+  },
 ];
 
 const useCases = [
@@ -38,7 +72,7 @@ export default function SpecSheet() {
           label="Specification"
           accent="var(--color-cobalt)"
           title="What is actually in your hand"
-          lede="Everything that matters about a tumbler is decided before any artwork goes on it. The barrel is the same under every design."
+          lede="Everything that matters about a tumbler is decided before any artwork goes on it — the steel, the vacuum seal, how the lid seats, whether it fits where you put it. The barrel is the same under every design."
         />
 
         <div className="mt-16 grid gap-12 lg:grid-cols-[1fr_1.15fr] lg:gap-20">
@@ -52,20 +86,22 @@ export default function SpecSheet() {
           </Reveal>
 
           <div>
-            <Reveal>
-              <dl className="border-t hairline">
-                {spec.map(([key, value], i) => (
-                  <div
-                    key={key}
-                    className="flex items-baseline justify-between gap-6 border-b hairline py-5"
-                    style={{ "--reveal-delay": `${i * 50}ms` } as React.CSSProperties}
-                  >
-                    <dt className="label text-dim">{key}</dt>
-                    <dd className="text-right text-[15px] text-chalk">{value}</dd>
-                  </div>
-                ))}
-              </dl>
-            </Reveal>
+            {groups.map((group, g) => (
+              <Reveal key={group.title} delay={g * 60} className={g ? "mt-12" : ""}>
+                <p className="label text-cobalt">{group.title}</p>
+                <dl className="mt-5 border-t hairline">
+                  {group.rows.map(([key, value]) => (
+                    <div
+                      key={key}
+                      className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 border-b hairline py-4"
+                    >
+                      <dt className="label text-dim">{key}</dt>
+                      <dd className="text-[15px] text-chalk sm:text-right">{value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </Reveal>
+            ))}
 
             <Reveal delay={120} className="mt-14">
               <p className="label text-dim">A day with it</p>
@@ -80,6 +116,24 @@ export default function SpecSheet() {
                     <span className="col-span-2 text-[14px] leading-relaxed text-ash sm:col-span-1">
                       {note}
                     </span>
+                  </li>
+                ))}
+              </ul>
+            </Reveal>
+
+            <Reveal delay={160} className="mt-14 border-t hairline pt-8">
+              <p className="label text-dim">The practical side</p>
+              <ul className="mt-5 flex flex-wrap gap-x-7 gap-y-3">
+                {[
+                  ["/support/shipping", "Shipping"],
+                  ["/support/returns", "Returns & warranty"],
+                  ["/support/care", "Care guide"],
+                  ["/support/faq", "FAQ"],
+                ].map(([href, label]) => (
+                  <li key={href}>
+                    <Link href={href} className="wipe text-[15px] text-ash hover:text-chalk">
+                      {label} &rarr;
+                    </Link>
                   </li>
                 ))}
               </ul>

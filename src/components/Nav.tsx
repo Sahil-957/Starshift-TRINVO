@@ -9,6 +9,7 @@ const links = [
   { href: "/#configurator", label: "Configurator" },
   { href: "/#spec", label: "Spec" },
   { href: "/about", label: "Studio" },
+  { href: "/support", label: "Support" },
 ];
 
 export default function Nav() {

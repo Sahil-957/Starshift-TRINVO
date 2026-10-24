@@ -5,13 +5,32 @@
  * original artwork printed on one stainless barrel. Customer personalisation
  * is deliberately not part of the storefront yet.
  *
- * PHOTOGRAPHY: drop files into `public/products/` and set `image` to the
- * filename. Until then each frame renders a labelled empty plate rather than
- * a stand-in product shot. Portrait 4:5, >=1600px tall, shot on a dark ground.
+ * PHOTOGRAPHY IS DEFERRED (phase 2). Every `images` array below is empty on
+ * purpose, so each frame renders a labelled development placeholder rather
+ * than a stand-in product shot. No component changes are needed to fill them:
+ * drop files into `public/products/` and add entries here.
  *
- * NAMES, PRICES AND SPECS below are placeholders for layout. Swap them for the
- * real designs and confirm every figure before launch.
+ *   images: [
+ *     { file: "prism-main.jpg", alt: "Prism, full wrap", kind: "main" },
+ *     { file: "prism-back.jpg", alt: "Prism, reverse", kind: "angle" },
+ *   ]
+ *
+ * The first entry is the lead shot; the rest become gallery thumbnails.
+ * Portrait 4:5, >=1600px tall, shot on a dark ground.
+ *
+ * NAMES, PRICES, PALETTES AND SPECS below are placeholders for layout only.
+ * No TINVO artwork has been selected yet — nothing here is a final design.
  */
+
+/** One photograph of a product. Files live in `public/products/`. */
+export type ProductImage = {
+  /** Filename inside /public/products */
+  file: string;
+  /** What the shot shows — used as alt text */
+  alt: string;
+  /** Shot type; the first entry in `images` is the lead shot */
+  kind: "main" | "angle" | "detail" | "lifestyle";
+};
 
 export type Product = {
   slug: string;
@@ -24,8 +43,8 @@ export type Product = {
   capacityMl: number;
   /** How the artwork is applied to the barrel */
   print: string;
-  /** Filename inside /public/products — undefined until photography lands */
-  image?: string;
+  /** Shots for this product. Empty until photography lands (phase 2). */
+  images: ProductImage[];
   /** Tints the key light behind the product so each frame is lit differently */
   tone: string;
   /** Drives this design's UI colour: index, swatches, hover bar, chips */
@@ -47,6 +66,7 @@ export const products: Product[] = [
     price: 1490,
     capacityMl: 600,
     print: "Full-wrap, matte",
+    images: [],
     tone: "#9fa6b2",
     accent: "#9aa0a8",
     palette: ["#17171a", "#4a4a52", "#9aa0a8"],
@@ -62,6 +82,7 @@ export const products: Product[] = [
     price: 1490,
     capacityMl: 600,
     print: "Full-wrap, matte",
+    images: [],
     tone: "#e8d9c0",
     accent: "#c08a4e",
     palette: ["#efe5d4", "#d2bc96", "#a8703a"],
@@ -77,6 +98,7 @@ export const products: Product[] = [
     price: 1590,
     capacityMl: 600,
     print: "Full-wrap, gloss",
+    images: [],
     tone: "#c87a46",
     accent: "#d9733c",
     palette: ["#8f3f1e", "#c87a46", "#e8b878"],
@@ -92,6 +114,7 @@ export const products: Product[] = [
     price: 1490,
     capacityMl: 600,
     print: "Full-wrap, matte",
+    images: [],
     tone: "#8d9a7f",
     accent: "#8fa070",
     palette: ["#4e5a44", "#8d9a7f", "#d6cdb6"],
@@ -107,6 +130,7 @@ export const products: Product[] = [
     price: 1690,
     capacityMl: 600,
     print: "Translucent wrap over brushed steel",
+    images: [],
     tone: "#8fa4d4",
     accent: "#6f86c4",
     palette: ["#1e2738", "#44557c", "#c4cbd4"],
@@ -122,6 +146,7 @@ export const products: Product[] = [
     price: 1690,
     capacityMl: 600,
     print: "Full-wrap, gloss",
+    images: [],
     tone: "#8a6cf0",
     accent: "#8a6cf0",
     palette: ["#3b2f8f", "#5f7fe0", "#d0507a"],
@@ -137,6 +162,7 @@ export const products: Product[] = [
     price: 1290,
     capacityMl: 350,
     print: "Full-wrap, matte",
+    images: [],
     tone: "#8a8275",
     accent: "#c9a86a",
     palette: ["#131110", "#3a332a", "#c9a86a"],
@@ -151,6 +177,7 @@ export const products: Product[] = [
     price: 1290,
     capacityMl: 350,
     print: "Full-wrap, matte",
+    images: [],
     tone: "#c99a74",
     accent: "#d89a6e",
     palette: ["#8a5a3c", "#c08763", "#f0ddc4"],

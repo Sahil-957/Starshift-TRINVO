@@ -52,10 +52,10 @@ export default function Manifesto() {
               patterns.
             </p>
             <p className="text-[15px] leading-relaxed text-ash">
-              That is the whole proposition. Not a colour chart with a logo on
-              it, and not a blank you are expected to decorate yourself —
-              finished pieces, printed full-wrap, that happen to hold 600 ml of
-              coffee.
+              The rest is the unglamorous half: 304 stainless, a vacuum wall
+              that does not sweat, a lid you can strip and wash, a warranty
+              that covers the parts that actually fail, and a spec sheet that
+              stays quiet about anything we have not measured.
             </p>
           </div>
         </Reveal>
