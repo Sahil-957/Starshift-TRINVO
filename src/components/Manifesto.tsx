@@ -9,29 +9,30 @@ export default function Manifesto() {
       id="manifesto"
       className="grain relative isolate scroll-mt-20 overflow-hidden border-t hairline"
     >
-      {siteImages.manifesto ? (
-        <Image
-          src={`/products/${siteImages.manifesto}`}
-          alt=""
-          fill
-          sizes="100vw"
-          className="z-0 object-cover opacity-35"
-        />
-      ) : (
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 z-0"
-          style={{
-            background:
-              "radial-gradient(55% 70% at 80% 30%, rgba(155,108,232,0.22) 0%, transparent 68%), radial-gradient(45% 60% at 12% 85%, rgba(208,80,122,0.16) 0%, transparent 70%)",
-          }}
-        />
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 z-0"
+        style={{
+          background:
+            "radial-gradient(55% 70% at 80% 30%, rgba(155,108,232,0.16) 0%, transparent 68%), radial-gradient(45% 60% at 12% 85%, rgba(208,80,122,0.12) 0%, transparent 70%)",
+        }}
+      />
+
+      {siteImages.manifesto && (
+        <div className="relative z-[2] aspect-[21/9] w-full overflow-hidden border-b hairline">
+          <Image
+            src={`/products/${siteImages.manifesto}`}
+            alt={`All ${products.length} TINVO designs side by side`}
+            fill
+            sizes="100vw"
+            className="object-cover"
+          />
+        </div>
       )}
-      <div aria-hidden="true" className="absolute inset-0 z-[1] bg-void/68" />
 
       <div className="relative z-[2] mx-auto max-w-[1500px] px-5 py-24 sm:px-8 lg:py-36">
         <Reveal>
-          <span className="label text-plum">05 — Why TINVO</span>
+          <span className="label text-plum">07 — Why TINVO</span>
         </Reveal>
 
         <Reveal delay={80}>

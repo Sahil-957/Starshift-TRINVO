@@ -33,12 +33,13 @@ export default function Signal() {
 
   return (
     <section
-      className="ambient border-t hairline bg-panel py-20 lg:py-28"
+      id="drop-list"
+      className="ambient scroll-mt-20 border-t hairline bg-panel py-20 lg:py-28"
       style={{ "--accent": "var(--color-rose)", "--ax": "20%" } as React.CSSProperties}
     >
       <div className="mx-auto max-w-[1500px] px-5 sm:px-8">
         <div className="flex items-baseline justify-between gap-6 border-b hairline pb-5">
-          <span className="label text-rose">07 — Drop list</span>
+          <span className="label text-rose">09 — Drop list</span>
           <span className="label text-dim">One email a month</span>
         </div>
 

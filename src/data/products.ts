@@ -4,10 +4,10 @@
  * Each entry is one design live on Qikink, printed on the same barrel.
  * Three are liquid-foil prints; seven are solid colours with the mark.
  *
- * IMAGES: `-front` and `-angle` are studio renders generated from the
- * print-ready wrap files by `scripts/render_tumblers.py` (transparent, so the
- * lit plate in ProductFrame shows through). `-lifestyle` is Qikink's own
- * mockup. Re-run the script after changing any wrap file.
+ * IMAGES: `-hero`, `-detail` and the 24 turntable frames in `spin/` are
+ * ray-traced studio renders made from the print-ready wrap files by
+ * `scripts/studio.py` (Blender). `-lifestyle` is Qikink's own mockup.
+ * Re-run the script after changing any wrap file.
  */
 
 /** One photograph of a product. Files live in `public/products/`. */
@@ -18,8 +18,6 @@ export type ProductImage = {
   alt: string;
   /** Shot type; the first entry in `images` is the lead shot */
   kind: "main" | "angle" | "detail" | "lifestyle";
-  /** Studio renders are cut out and sit inside the frame; photos fill it */
-  fit?: "contain" | "cover";
 };
 
 /**
@@ -37,6 +35,14 @@ export const barrel = {
   lid: "Splash-proof lid with a reusable metal straw",
   print: "Sublimation, OEKO-TEX certified inks",
 } as const;
+
+/** The things most tumbler listings leave out, and most returns come from. */
+export const goodToKnow = [
+  ["Splash-proof, not leak-proof", "The lid stops sloshes while you walk. Keep it upright in a bag: no straw-lid tumbler is sealed for travelling on its side."],
+  ["Hand wash only", "No dishwasher. Heat and detergent wear the print, so warm water and a soft sponge keep it looking new."],
+  ["Never microwave or freeze it", "It is a steel vacuum vessel: a microwave makes it arc and freezing can break the vacuum seal."],
+  ["Printed for you", "Each tumbler is printed after you order, not pulled from a warehouse shelf."],
+];
 
 export type Product = {
   slug: string;
@@ -63,10 +69,10 @@ export type Product = {
   featured?: boolean;
 };
 
-/** Front render, three-quarter render, then Qikink's lifestyle mockup. */
+/** Studio front, lid-and-straw close-up, then Qikink's lifestyle mockup. */
 const shots = (slug: string, name: string): ProductImage[] => [
-  { file: `${slug}-front.webp`, alt: `${name} TINVO tumbler, front`, kind: "main", fit: "contain" },
-  { file: `${slug}-angle.webp`, alt: `${name} TINVO tumbler, turned to show the wrap`, kind: "angle", fit: "contain" },
+  { file: `${slug}-hero.webp`, alt: `${name} TINVO tumbler, front`, kind: "main" },
+  { file: `${slug}-detail.webp`, alt: `${name} tumbler: splash-proof lid and metal straw`, kind: "detail" },
   { file: `${slug}-lifestyle.webp`, alt: `${name} TINVO tumbler on a table`, kind: "lifestyle" },
 ];
 
@@ -245,8 +251,7 @@ export type Review = {
 export const reviews: Review[] = [];
 
 /** Editorial stills not tied to one design, in `public/products/`. */
-export const siteImages: { hero?: string; manifesto?: string } = {
-  hero: undefined,
-  /** Five-barrel group render, 21:9 */
+export const siteImages: { manifesto?: string } = {
+  /** Every design on one sweep, 21:9 */
   manifesto: "lineup.webp",
 };

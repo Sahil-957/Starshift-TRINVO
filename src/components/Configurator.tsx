@@ -58,7 +58,7 @@ export default function Configurator() {
     >
       <div className="mx-auto max-w-[1500px] px-5 sm:px-8">
         <div className="flex items-baseline justify-between gap-6 border-b hairline pb-5">
-          <span className="label text-jade">04 — Configurator</span>
+          <span className="label text-jade">06 — Configurator</span>
           <span className="label tabular-nums text-dim">
             {done ? "Complete" : `${String(step + 1).padStart(2, "0")} / ${String(total).padStart(2, "0")}`}
           </span>

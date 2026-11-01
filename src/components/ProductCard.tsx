@@ -16,6 +16,11 @@ export default function ProductCard({
     <Link href={`/shop/${product.slug}`} className="group block">
       <div className="relative overflow-hidden">
         <ProductFrame product={product} sizes={sizes} />
+        {product.images[1] && (
+          <div className="absolute inset-0 z-[2] opacity-0 transition-opacity duration-500 group-hover:opacity-100 group-focus-visible:opacity-100">
+            <ProductFrame product={product} image={product.images[1]} sizes={sizes} />
+          </div>
+        )}
         <span
           className="label absolute left-4 top-4 z-[3]"
           style={{ color: product.accent }}
@@ -41,7 +46,7 @@ export default function ProductCard({
       </div>
       <p className="mt-2 text-[14px] leading-snug text-ash">{product.tagline}</p>
       <p className="label mt-3 text-dim">
-        {barrel.capacity} · {barrel.print}
+        {product.finish} · {barrel.capacity}
       </p>
     </Link>
   );

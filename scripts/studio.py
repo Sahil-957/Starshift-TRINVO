@@ -7,9 +7,9 @@ Builds a measured 20 oz skinny tumbler (rounded base, steel lip, clear
 press-on lid, brushed straw), wraps each print-ready design from
 resized/With Logo/ around it and shoots it on a dark sweep:
 
-  public/products/<slug>-hero.webp     front, logo to camera       (1600x2000)
-  public/products/<slug>-detail.webp   lid and straw, from above   (1600x2000)
-  public/products/spin/<slug>-NN.webp  24-frame turntable          (800x1000)
+  public/products/<slug>-hero.webp     front, logo to camera       (1080x1350)
+  public/products/<slug>-detail.webp   lid and straw, from above   (1080x1350)
+  public/products/spin/<slug>-NN.webp  24-frame turntable          (560x700)
   public/products/lineup.webp          all designs together        (2520x1080)
 
 Re-run after changing a design file. Renders are slow on CPU; --test makes
@@ -96,6 +96,8 @@ def lathe(name, profile, mats, uv_v=None, segs=SEG):
                 vj = a.index(loop.vert) if loop.vert in a else b.index(loop.vert)
                 # the column closing the ring takes u = 1, not 0
                 u = 1.0 if (vj == 0 and j == segs - 1) else vj / segs
+                # inset: the wrap files carry a light 1-2 px border
+                u = 0.001 + u * 0.998
                 z = loop.vert.co.z
                 v = uv_v(z) if uv_v else 0
                 loop[uv].uv = (u, v)
@@ -132,7 +134,7 @@ def materials():
     pm, nodes, links = node_mat("Print")
     bsdf = principled(nodes)
     tex = nodes.new("ShaderNodeTexImage")
-    tex.extension = "REPEAT"
+    tex.extension = "EXTEND"
     tex.interpolation = "Cubic"
     links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
     set_in(bsdf, "Roughness", 0.32)
@@ -150,9 +152,9 @@ def materials():
 
     im, nodes, links = node_mat("SteelInside")
     bsdf = principled(nodes)
-    set_in(bsdf, "Base Color", (0.55, 0.55, 0.57, 1))
+    set_in(bsdf, "Base Color", (0.8, 0.8, 0.82, 1))
     set_in(bsdf, "Metallic", 1.0)
-    set_in(bsdf, "Roughness", 0.3)
+    set_in(bsdf, "Roughness", 0.45)
 
     lm, nodes, links = node_mat("Lid")
     bsdf = principled(nodes)
@@ -176,7 +178,7 @@ def build_tumbler(pm, sm, im, lm, gm):
     prof += [(r, z, 1) for r, z in arc(R - 0.0012, LIP_Z - 0.0012, 0.0012, 0, math.pi / 2, 4)][1:]
     prof += [(R - 0.0025, LIP_Z, 2), (R - 0.0028, LIP_Z - 0.004, 2), (R - 0.0028, 0.012, 2), (0.0, 0.012, 2)]
     body = lathe("Barrel", prof, [pm, sm, im],
-                 uv_v=lambda z: min(max((z - PRINT_Z0) / PRINT_H, 0.0005), 0.9995))
+                 uv_v=lambda z: min(max((z - PRINT_Z0) / PRINT_H, 0.003), 0.997))
 
     # clear lid: an outer skirt over the lip and a flat top, solid for refraction
     lz = LIP_Z
@@ -249,20 +251,21 @@ def build_set():
         light.color = color
         obj = bpy.data.objects.new(name, light)
         obj.location = loc
+        obj.visible_camera = False  # lit by the fixtures, never looking at them
         bpy.context.collection.objects.link(obj)
         d = Vector(target) - Vector(loc)
         obj.rotation_euler = d.to_track_quat("-Z", "Y").to_euler()
         return obj
 
     # tall strip key: the long vertical highlight that sells a glossy cylinder
-    area("Key", (0.18, 0.9), (-0.55, -0.42, 0.22), (0, 0, 0.12), 60)
-    area("Fill", (1.2, 1.2), (0.9, -0.9, 0.35), (0, 0, 0.12), 14, color=(0.95, 0.97, 1.0))
+    area("Key", (0.18, 0.9), (-0.55, -0.42, 0.22), (0, 0, 0.12), 11)
+    area("Fill", (1.2, 1.2), (0.9, -0.9, 0.35), (0, 0, 0.12), 2.5, color=(0.95, 0.97, 1.0))
     # edge rims so dark barrels separate from a dark set
-    area("RimL", (0.08, 0.8), (-0.32, 0.38, 0.2), (0, 0, 0.12), 32)
-    area("RimR", (0.08, 0.8), (0.32, 0.38, 0.2), (0, 0, 0.12), 32)
-    area("Top", (0.5, 0.5), (0.05, -0.1, 0.75), (0, 0, 0.2), 10)
+    area("RimL", (0.08, 0.8), (-0.32, 0.38, 0.2), (0, 0, 0.12), 7)
+    area("RimR", (0.08, 0.8), (0.32, 0.38, 0.2), (0, 0, 0.12), 7)
+    area("Top", (0.5, 0.5), (0.05, -0.1, 0.75), (0, 0, 0.2), 1.5)
     # coloured glow on the backdrop, tinted per design
-    glow = area("Glow", (0.9, 0.9), (0.0, 0.25, 0.08), (0, 1.2, 0.55), 55, shape="DISK")
+    glow = area("Glow", (0.9, 0.9), (0.0, 0.25, 0.08), (0, 1.2, 0.55), 14, shape="DISK")
     return glow
 
 
@@ -285,7 +288,7 @@ def world():
         env = nodes.new("ShaderNodeTexEnvironment")
         env.image = bpy.data.images.load(str(hdri))
         links.new(env.outputs["Color"], bg.inputs["Color"])
-    bg.inputs["Strength"].default_value = 0.35
+    bg.inputs["Strength"].default_value = 0.12
     # reflections only: the camera sees black, the set provides the backdrop
     lp = nodes.new("ShaderNodeLightPath")
     black = nodes.new("ShaderNodeBackground")
@@ -320,15 +323,15 @@ def setup_render(samples):
     sc.cycles.device = "CPU"
     sc.cycles.samples = samples
     sc.cycles.use_adaptive_sampling = True
-    sc.cycles.adaptive_threshold = 0.02
+    sc.cycles.adaptive_threshold = 0.03
     sc.cycles.use_denoising = True
     try:
         sc.cycles.denoiser = "OPENIMAGEDENOISE"
     except Exception:
         pass
-    sc.cycles.max_bounces = 8
-    sc.cycles.transmission_bounces = 8
-    sc.cycles.glossy_bounces = 4
+    sc.cycles.max_bounces = 6
+    sc.cycles.transmission_bounces = 6
+    sc.cycles.glossy_bounces = 3
     sc.cycles.diffuse_bounces = 2
     sc.cycles.caustics_reflective = False
     sc.cycles.caustics_refractive = False
@@ -397,8 +400,8 @@ def main():
     pm, sm, im, lm, gm, tex = materials()
     rig = build_tumbler(pm, sm, im, lm, gm)
 
-    hero_cam = camera((0, -1.05, 0.2), (0, 0, 0.128), 85)
-    detail_cam = camera((-0.17, -0.33, 0.42), (0.004, 0, 0.19), 100, fstop=4.0, focus=0.4)
+    hero_cam = camera((0, -1.3, 0.22), (0, 0, 0.15), 85)
+    detail_cam = camera((-0.16, -0.7, 0.42), (0.004, 0, 0.165), 85, fstop=8.0, focus=0.76)
     sc = bpy.context.scene
 
     slugs = [s for s in DESIGNS if not only or s in only]
@@ -413,17 +416,17 @@ def main():
         if "hero" in shots:
             rig.rotation_euler = (0, 0, front)
             sc.camera = hero_cam
-            shoot(out / f"{slug}-hero.webp", int(1600 * scale), int(2000 * scale), q(160))
+            shoot(out / f"{slug}-hero.webp", int(1080 * scale), int(1350 * scale), q(48))
         if "detail" in shots:
             rig.rotation_euler = (0, 0, front + math.radians(35))
             sc.camera = detail_cam
-            shoot(out / f"{slug}-detail.webp", int(1600 * scale), int(2000 * scale), q(160))
+            shoot(out / f"{slug}-detail.webp", int(1080 * scale), int(1350 * scale), q(48))
         if "spin" in shots:
             sc.camera = hero_cam
             frames = 6 if test else 24
             for i in range(frames):
                 rig.rotation_euler = (0, 0, front + 2 * math.pi * i / frames)
-                shoot(out / "spin" / f"{slug}-{i:02d}.webp", int(800 * scale), int(1000 * scale), q(48))
+                shoot(out / "spin" / f"{slug}-{i:02d}.webp", int(560 * scale), int(700 * scale), q(12))
 
     if "lineup" in shots and not only:
         lineup(rig, tex, glow, out, scale, q)
@@ -432,8 +435,11 @@ def main():
 def lineup(rig, tex, glow, out, scale, q):
     """All designs in a shallow arc, one barrel per design."""
     sc = bpy.context.scene
-    rig.hide_render = True
+    # hiding an empty doesn't hide its children
+    for o in (rig, *rig.children):
+        o.hide_render = True
     n = len(DESIGNS)
+    dist = 1.15
     for i, (slug, (wrap, u0, _)) in enumerate(DESIGNS.items()):
         copy = rig.copy()
         bpy.context.collection.objects.link(copy)
@@ -446,17 +452,18 @@ def lineup(rig, tex, glow, out, scale, q):
                 c.data.materials[0] = m
                 t = next(nd for nd in m.node_tree.nodes if nd.type == "TEX_IMAGE")
                 t.image = bpy.data.images.load(str(SRC / wrap), check_existing=True)
+            c.hide_render = False
             c.parent = copy
             bpy.context.collection.objects.link(c)
         x = (i - (n - 1) / 2) * 0.105
-        copy.location = (x, 0.06 * (x / 0.5) ** 2 * 6, 0)
-        copy.rotation_euler = (0, 0, -2 * math.pi * u0 + math.atan2(x, 1.4))
+        copy.location = (x, 0.25 * x * x, 0)
+        copy.rotation_euler = (0, 0, -2 * math.pi * u0 - math.atan2(x, dist))
     glow.data.color = (0.55, 0.5, 0.7)
-    glow.data.energy = 120
+    glow.data.energy = 45
     glow.data.size = 2.2
-    cam = camera((0, -1.75, 0.26), (0, 0.05, 0.12), 50)
+    cam = camera((0, -dist, 0.2), (0, 0.03, 0.11), 50)
     sc.camera = cam
-    shoot(out / "lineup.webp", int(2520 * scale), int(1080 * scale), q(160))
+    shoot(out / "lineup.webp", int(2520 * scale), int(1080 * scale), q(64))
 
 
 main()

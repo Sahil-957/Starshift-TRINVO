@@ -29,7 +29,7 @@ export default function Reviews() {
     >
       <div className="mx-auto max-w-[1500px] px-5 sm:px-8">
         <SectionHead
-          index="06"
+          index="08"
           label="Owners"
           accent="var(--color-jade)"
           title="Reviews, verified orders only"

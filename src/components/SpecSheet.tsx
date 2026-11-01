@@ -52,7 +52,7 @@ export default function SpecSheet() {
     >
       <div className="mx-auto max-w-[1500px] px-5 sm:px-8">
         <SectionHead
-          index="03"
+          index="04"
           label="Specification"
           accent="var(--color-cobalt)"
           title="What is actually in your hand"
@@ -63,6 +63,7 @@ export default function SpecSheet() {
           <Reveal>
             <ProductFrame
               product={subject}
+              image={subject.images[1]}
               className="aspect-[4/5]"
               sizes="(max-width: 1024px) 90vw, 42vw"
               lightY="30%"
