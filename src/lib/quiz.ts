@@ -32,19 +32,19 @@ export const quizQuestions: QuizQuestion[] = [
     prompt: "How loud should the design be?",
     caption: "One barrel, one size, across the whole range. Only the artwork changes.",
     options: [
-      { id: "quiet", label: "Nearly invisible", hint: "One field, one line, nothing else", traits: ["minimal", "dark"] },
-      { id: "warm", label: "Soft and textural", hint: "Layered tones you notice up close", traits: ["warm", "light"] },
-      { id: "loud", label: "Unmissable", hint: "Reads like a poster from across the room", traits: ["bold"] },
+      { id: "quiet", label: "Quiet and dark", hint: "One deep colour and the mark, nothing else", traits: ["minimal", "dark"] },
+      { id: "warm", label: "Soft and light", hint: "Pastels and creams you can live with daily", traits: ["minimal", "light"] },
+      { id: "loud", label: "Unmissable", hint: "Liquid-foil colour that moves as you turn it", traits: ["bold"] },
     ],
   },
   {
     id: "palette",
     prompt: "Which palette pulls you in?",
-    caption: "Every design is drawn around one of three.",
+    caption: "Every design leans towards one of three.",
     options: [
-      { id: "mono", label: "Monochrome", hint: "Graphite, black, a single metal line", traits: ["mono", "dark"] },
-      { id: "earth", label: "Earth", hint: "Clay, sand, olive, burnt orange", traits: ["earth", "warm"] },
-      { id: "cool", label: "Cool", hint: "Indigo, cobalt, violet, steel", traits: ["cool"] },
+      { id: "mono", label: "Deep and neutral", hint: "Navy, cocoa, near-black", traits: ["mono", "dark"] },
+      { id: "earth", label: "Warm and earthy", hint: "Gold, cream, olive, rose", traits: ["earth", "warm"] },
+      { id: "cool", label: "Cool", hint: "Chrome, powder blue, lilac", traits: ["cool"] },
     ],
   },
 ];

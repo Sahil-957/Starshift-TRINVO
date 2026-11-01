@@ -1,25 +1,13 @@
 /**
  * Central catalogue for the TINVO storefront.
  *
- * Each entry is a DESIGN, not a colour option. TINVO sells its own
- * original artwork printed on one stainless barrel. Customer personalisation
- * is deliberately not part of the storefront yet.
+ * Each entry is one design live on Qikink, printed on the same barrel.
+ * Three are liquid-foil prints; seven are solid colours with the mark.
  *
- * PHOTOGRAPHY IS DEFERRED (phase 2). Every `images` array below is empty on
- * purpose, so each frame renders a labelled development placeholder rather
- * than a stand-in product shot. No component changes are needed to fill them:
- * drop files into `public/products/` and add entries here.
- *
- *   images: [
- *     { file: "prism-main.jpg", alt: "Prism, full wrap", kind: "main" },
- *     { file: "prism-back.jpg", alt: "Prism, reverse", kind: "angle" },
- *   ]
- *
- * The first entry is the lead shot; the rest become gallery thumbnails.
- * Portrait 4:5, >=1600px tall, shot on a dark ground.
- *
- * NAMES, PRICES, PALETTES AND SPECS below are placeholders for layout only.
- * No TINVO artwork has been selected yet — nothing here is a final design.
+ * IMAGES: `-front` and `-angle` are studio renders generated from the
+ * print-ready wrap files by `scripts/render_tumblers.py` (transparent, so the
+ * lit plate in ProductFrame shows through). `-lifestyle` is Qikink's own
+ * mockup. Re-run the script after changing any wrap file.
  */
 
 /** One photograph of a product. Files live in `public/products/`. */
@@ -30,6 +18,8 @@ export type ProductImage = {
   alt: string;
   /** Shot type; the first entry in `images` is the lead shot */
   kind: "main" | "angle" | "detail" | "lifestyle";
+  /** Studio renders are cut out and sit inside the frame; photos fill it */
+  fit?: "contain" | "cover";
 };
 
 /**
@@ -56,12 +46,14 @@ export type Product = {
   /** Editorial paragraph for the product page */
   description: string;
   price: number;
-  /** Shots for this product. Empty until photography lands (phase 2). */
+  /** Shots for this product; the first is the lead image */
   images: ProductImage[];
   /** Tints the key light behind the product so each frame is lit differently */
   tone: string;
   /** Drives this design's UI colour: index, swatches, hover bar, chips */
   accent: string;
+  /** Liquid-foil print or a solid colour with the mark */
+  finish: "Liquid foil" | "Solid colour";
   /** Who makes and ships it — keys into `data/policy.ts`. Defaults to Qikink. */
   fulfilment?: string;
   /** Three colours pulled from the artwork, shown as swatches on the card */
@@ -71,116 +63,159 @@ export type Product = {
   featured?: boolean;
 };
 
+/** Front render, three-quarter render, then Qikink's lifestyle mockup. */
+const shots = (slug: string, name: string): ProductImage[] => [
+  { file: `${slug}-front.webp`, alt: `${name} TINVO tumbler, front`, kind: "main", fit: "contain" },
+  { file: `${slug}-angle.webp`, alt: `${name} TINVO tumbler, turned to show the wrap`, kind: "angle", fit: "contain" },
+  { file: `${slug}-lifestyle.webp`, alt: `${name} TINVO tumbler on a table`, kind: "lifestyle" },
+];
+
 export const products: Product[] = [
   {
-    slug: "monolith",
-    name: "Monolith",
-    tagline: "One block of graphite, nothing else",
+    slug: "aurora-gilt",
+    name: "Aurora Gilt",
+    tagline: "Liquid gold through an oil-slick spectrum",
     description:
-      "The quietest design we make: a single graphite field broken by one hairline. Drawn to be the thing you stop noticing by the second week, which is the highest compliment a desk object can earn.",
+      "Molten gold folding into violet, teal and ice blue, printed edge to edge so the colour keeps moving as you turn it. The richest design in the range.",
     price: 1490,
-    images: [],
-    tone: "#9fa6b2",
-    accent: "#9aa0a8",
-    palette: ["#17171a", "#4a4a52", "#9aa0a8"],
-    traits: ["minimal", "desk", "dark", "mono"],
+    finish: "Liquid foil",
+    images: shots("aurora-gilt", "Aurora Gilt"),
+    tone: "#c9a24a",
+    accent: "#d4ad5a",
+    palette: ["#b8892f", "#7c6ad6", "#5fc4d8"],
+    traits: ["bold", "gift", "desk", "warm"],
     featured: true,
   },
   {
-    slug: "ivory-dune",
-    name: "Ivory Dune",
-    tagline: "Drifting sand, drawn in four tones",
+    slug: "chroma-tide",
+    name: "Chroma Tide",
+    tagline: "Polished chrome with a cool iridescent edge",
     description:
-      "Layered dune ridges in bone, sand and a single burnt line, printed so the lightest tone sits almost flush with the barrel. The design we reach for when the tumbler sits next to paper, linen and light wood.",
+      "Waves of liquid silver with a cyan and lilac sheen running through the folds. Reads like brushed metal from across a room and like a hologram up close.",
     price: 1490,
-    images: [],
-    tone: "#e8d9c0",
-    accent: "#c08a4e",
-    palette: ["#efe5d4", "#d2bc96", "#a8703a"],
-    traits: ["minimal", "desk", "light", "gift", "earth"],
+    finish: "Liquid foil",
+    images: shots("chroma-tide", "Chroma Tide"),
+    tone: "#a9c4d8",
+    accent: "#9fc6dd",
+    palette: ["#5d6b80", "#c7d3de", "#7fd6e6"],
+    traits: ["bold", "desk", "travel", "cool"],
     featured: true,
   },
   {
-    slug: "ember",
-    name: "Ember",
-    tagline: "A burn mark that never quite goes out",
+    slug: "opal-drift",
+    name: "Opal Drift",
+    tagline: "Pastel opal in pink, lilac and sky",
     description:
-      "Our loudest design. A terracotta field with a brass seam running the full height of the barrel, drawn to catch the light at one angle and disappear at every other. Built to be the single bright object on a desk of neutrals.",
-    price: 1590,
-    images: [],
-    tone: "#c87a46",
-    accent: "#d9733c",
-    palette: ["#8f3f1e", "#c87a46", "#e8b878"],
-    traits: ["bold", "desk", "warm", "gift", "earth"],
-    featured: true,
-  },
-  {
-    slug: "sage-field",
-    name: "Sage Field",
-    tagline: "Topographic lines, field-guide green",
-    description:
-      "Contour lines lifted from a survey map, redrawn in dusty olive over bone. Sits somewhere between field gear and tableware, which is why it tends to end up in a backpack side pocket rather than on a desk.",
+      "A soft holographic swirl of candy pink, lilac and pale blue. Bright without being loud, and an easy one to give.",
     price: 1490,
-    images: [],
-    tone: "#8d9a7f",
-    accent: "#8fa070",
-    palette: ["#4e5a44", "#8d9a7f", "#d6cdb6"],
-    traits: ["outdoors", "travel", "bold", "earth"],
+    finish: "Liquid foil",
+    images: shots("opal-drift", "Opal Drift"),
+    tone: "#d9a6e8",
+    accent: "#e2a3dc",
+    palette: ["#e79bd0", "#b9a6f0", "#9fd6f2"],
+    traits: ["bold", "gift", "light", "cool"],
     featured: true,
   },
   {
-    slug: "midnight-steel",
-    name: "Midnight Steel",
-    tagline: "Indigo over brushed metal",
+    slug: "midnight-slate",
+    name: "Midnight Slate",
+    tagline: "Deep navy with a white mark",
     description:
-      "A deep indigo wash printed thin enough that the brushed stainless reads through it, so the barrel shifts between blue and bare metal depending on the room. The most forgiving design in the range over a long life.",
-    price: 1690,
-    images: [],
-    tone: "#8fa4d4",
-    accent: "#6f86c4",
-    palette: ["#1e2738", "#44557c", "#c4cbd4"],
-    traits: ["minimal", "travel", "dark", "gift", "cool"],
+      "A deep slate navy, broken only by the TINVO mark in white. Dark enough to hide a long day of use and quiet enough for any desk or meeting room.",
+    price: 1490,
+    finish: "Solid colour",
+    images: shots("midnight-slate", "Midnight Slate"),
+    tone: "#7d8fb3",
+    accent: "#8fa3cc",
+    palette: ["#262f40", "#3d4a62", "#c9ced6"],
+    traits: ["minimal", "dark", "mono", "cool", "commute", "desk"],
     featured: true,
   },
   {
-    slug: "prism",
-    name: "Prism",
-    tagline: "The mark, split into its spectrum",
+    slug: "cloud-theory",
+    name: "Cloud Theory",
+    tagline: "Powder blue, calm and cool",
     description:
-      "Our own prism refracted across the full wrap — violet through cobalt into a single rose edge. The one design in the range that behaves like a poster rather than a finish, and the one people pick up first.",
-    price: 1690,
-    images: [],
-    tone: "#8a6cf0",
-    accent: "#8a6cf0",
-    palette: ["#3b2f8f", "#5f7fe0", "#d0507a"],
-    traits: ["bold", "desk", "gift", "cool"],
+      "A soft powder blue with the mark in black. Light and airy, the colour of a clear morning, and easy to live with every day.",
+    price: 1490,
+    finish: "Solid colour",
+    images: shots("cloud-theory", "Cloud Theory"),
+    tone: "#9cb8d4",
+    accent: "#a9c3de",
+    palette: ["#9cb8d4", "#c3d5e6", "#1a1a1a"],
+    traits: ["minimal", "light", "cool", "travel", "commute"],
+  },
+  {
+    slug: "pink-serenity",
+    name: "Pink Serenity",
+    tagline: "Dusty pastel pink",
+    description:
+      "A muted, dusty pink with the mark in white. Warm without being sugary.",
+    price: 1490,
+    finish: "Solid colour",
+    images: shots("pink-serenity", "Pink Serenity"),
+    tone: "#da9191",
+    accent: "#e5a3a3",
+    palette: ["#da9191", "#efc2c0", "#f2f1ee"],
+    traits: ["minimal", "light", "warm", "gift"],
     featured: true,
   },
   {
-    slug: "compact-noir",
-    name: "Compact Noir",
-    tagline: "Black, with a single brass rule",
+    slug: "solara",
+    name: "Solara",
+    tagline: "Sunlit cream with a black mark",
     description:
-      "The most stripped-back design in the range: a flat black field broken once, low on the barrel, by a brass line that catches the light when you turn it. Nothing else happens, which is the point.",
-    price: 1290,
-    images: [],
-    tone: "#8a8275",
-    accent: "#c9a86a",
-    palette: ["#131110", "#3a332a", "#c9a86a"],
-    traits: ["minimal", "commute", "dark", "mono"],
+      "A warm buttery cream with the mark in black. The lightest design in the range, at home next to linen, paper and light wood.",
+    price: 1490,
+    finish: "Solid colour",
+    images: shots("solara", "Solara"),
+    tone: "#f0dfa8",
+    accent: "#ecd89a",
+    palette: ["#faefc5", "#e9d9a2", "#1a1a1a"],
+    traits: ["minimal", "light", "warm", "earth", "desk", "gift"],
+    featured: true,
   },
   {
-    slug: "clay-commute",
-    name: "Clay Commute",
-    tagline: "A clay gradient that deepens toward the base",
+    slug: "mauve-mode",
+    name: "Mauve Mode",
+    tagline: "Muted plum, grown-up and warm",
     description:
-      "A soft clay wash that starts pale at the lip and runs darker the further down it goes, so the barrel reads heavier at the bottom than it is. Warm, matte and quiet enough to carry every day.",
-    price: 1290,
-    images: [],
-    tone: "#c99a74",
-    accent: "#d89a6e",
-    palette: ["#8a5a3c", "#c08763", "#f0ddc4"],
-    traits: ["warm", "commute", "gift", "earth"],
+      "A dusky mauve that sits between plum and rosewood, with the mark in white. Rich in colour without asking for attention.",
+    price: 1490,
+    finish: "Solid colour",
+    images: shots("mauve-mode", "Mauve Mode"),
+    tone: "#a07a8c",
+    accent: "#c08ca3",
+    palette: ["#664454", "#8a6474", "#e8e4e6"],
+    traits: ["minimal", "dark", "warm", "gift", "desk"],
+  },
+  {
+    slug: "cocoa-noir",
+    name: "Cocoa Noir",
+    tagline: "Dark chocolate, nearly black",
+    description:
+      "A deep cocoa brown that reads almost black until the light hits it, with the mark in white. Our darkest and most understated design.",
+    price: 1490,
+    finish: "Solid colour",
+    images: shots("cocoa-noir", "Cocoa Noir"),
+    tone: "#9c7a6e",
+    accent: "#c49a86",
+    palette: ["#3f2c30", "#5c4247", "#e8e4e6"],
+    traits: ["minimal", "dark", "earth", "warm", "mono", "commute"],
+  },
+  {
+    slug: "olive-dusk",
+    name: "Olive Dusk",
+    tagline: "Earthy olive with a white mark",
+    description:
+      "A muted olive drab with the mark in white. Field-gear colour that looks at home in a backpack pocket as much as on a desk.",
+    price: 1490,
+    finish: "Solid colour",
+    images: shots("olive-dusk", "Olive Dusk"),
+    tone: "#a59a72",
+    accent: "#b3a77a",
+    palette: ["#776d4a", "#9a9070", "#e8e4e6"],
+    traits: ["minimal", "earth", "outdoors", "travel"],
   },
 ];
 
@@ -209,13 +244,9 @@ export type Review = {
 
 export const reviews: Review[] = [];
 
-/**
- * Editorial stills that are not tied to one design.
- * Set the filename once the shot exists in `public/products/`.
- */
+/** Editorial stills not tied to one design, in `public/products/`. */
 export const siteImages: { hero?: string; manifesto?: string } = {
-  /** Full-bleed opening still. Landscape 16:9, >=2400px wide, dark ground. */
   hero: undefined,
-  /** Wide still behind the manifesto. Landscape 21:9 crops well. */
-  manifesto: undefined,
+  /** Five-barrel group render, 21:9 */
+  manifesto: "lineup.webp",
 };

@@ -4,11 +4,12 @@ import PageHeader from "@/components/PageHeader";
 import ProductFrame from "@/components/ProductFrame";
 import Reveal from "@/components/Reveal";
 import { collectionGroups, collectionProducts } from "@/data/collections";
+import { products } from "@/data/products";
 
 export const metadata: Metadata = {
   title: "Collections",
   description:
-    "The catalogue grouped by size, character and what you actually use it for.",
+    "The catalogue grouped by finish and by what you actually use it for.",
 };
 
 export default function CollectionsIndexPage() {
@@ -18,7 +19,7 @@ export default function CollectionsIndexPage() {
         index="02"
         label="Collections"
         title="Ways into the range"
-        lede="The same eight designs, sorted three ways — by the size you need, by how loud the artwork is, and by where it is going to live."
+        lede={`The same ${products.length} designs, sorted two ways — by finish, and by where the tumbler is going to live.`}
       />
 
       <section className="mx-auto max-w-[1500px] px-5 pb-24 sm:px-8 lg:pb-32">

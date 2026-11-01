@@ -53,7 +53,7 @@ export default function Nav() {
             className="h-[17px] w-auto sm:h-[19px]"
           />
           <span className="label hidden border-l hairline pl-4 text-dim 2xl:block">
-            Art you can carry
+            Make every sip your style
           </span>
         </Link>
 

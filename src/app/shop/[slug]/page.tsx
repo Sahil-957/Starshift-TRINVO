@@ -27,6 +27,14 @@ export default async function ProductPage({ params }: PageProps<"/shop/[slug]">)
 
   const others = products.filter((p) => p.slug !== product.slug).slice(0, 4);
 
+  const details = [
+    ["Premium 304 stainless steel", "Crafted with durable stainless steel for reliable everyday hydration."],
+    ["Double-wall insulation", "Designed to help maintain your drink's temperature, keeping it hot or cold for longer."],
+    ["Splash-proof lid", "A convenient lid designed to help minimise accidental splashes while you're on the move."],
+    ["Reusable metal straw", "Effortless sipping with the included metal straw."],
+    ["Designed for everyday life", "A sleek, minimalist silhouette that fits effortlessly into your daily routine."],
+  ];
+
   return (
     <>
       <div className="mx-auto grid max-w-[1500px] gap-10 px-5 pb-20 pt-10 sm:px-8 lg:grid-cols-2 lg:gap-16 lg:pb-28">
@@ -62,13 +70,30 @@ export default async function ProductPage({ params }: PageProps<"/shop/[slug]">)
             {product.description}
           </p>
 
+          <section className="mt-12" aria-labelledby="details-heading">
+            <h2 id="details-heading" className="label" style={{ color: product.accent }}>
+              The details that matter
+            </h2>
+            <ul className="mt-5 grid gap-5 sm:grid-cols-2">
+              {details.map(([title, body]) => (
+                <li key={title} className="border-t hairline pt-4">
+                  <p className="text-[15px] text-chalk">{title}</p>
+                  <p className="mt-1.5 text-[14px] leading-relaxed text-ash">{body}</p>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-7 text-[15px] text-chalk">
+              Not just another tumbler. A little more you, in every sip.
+            </p>
+          </section>
+
           <dl className="mt-12 border-t hairline">
             {[
               ["Capacity", `${barrel.capacity} (${barrel.capacityMl} ml)`],
               ["Body", barrel.material],
               ["Lid", barrel.lid],
               ["Surface", barrel.print],
-              ["Artwork", "Drawn in-house"],
+              ["Finish", product.finish],
               ["Origin", "India"],
             ].map(([key, value]) => (
               <div
@@ -108,7 +133,7 @@ export default async function ProductPage({ params }: PageProps<"/shop/[slug]">)
               More designs
             </span>
             <Link href="/shop" className="wipe label text-ash hover:text-chalk">
-              All eight →
+              All {products.length} →
             </Link>
           </div>
           <ul className="mt-12 grid grid-cols-2 gap-x-5 gap-y-10 lg:grid-cols-4 lg:gap-x-6">

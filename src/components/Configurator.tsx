@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import ProductFrame from "./ProductFrame";
 import Swatches from "./Swatches";
-import { barrel, formatPrice } from "@/data/products";
+import { barrel, formatPrice, products } from "@/data/products";
 import {
   matchedTraits,
   quizQuestions,
@@ -13,8 +13,8 @@ import {
 } from "@/lib/quiz";
 
 const traitCopy: Record<string, string> = {
-  minimal: "Quiet design",
-  bold: "High contrast",
+  minimal: "Solid colour",
+  bold: "Liquid foil",
   desk: "Desk-sized",
   commute: "Cup-holder ready",
   outdoors: "Built for outside",
@@ -71,8 +71,8 @@ export default function Configurator() {
               Find your design
             </h2>
             <p className="mt-7 max-w-sm text-[15px] leading-relaxed text-ash">
-              Eight designs is seven too many to choose between. Four questions
-              and we narrow it to one.
+              {products.length} designs is a lot to choose between.{" "}
+              {quizQuestions.length} questions and we narrow it to one.
             </p>
 
             <div className="mt-12 flex gap-1.5">

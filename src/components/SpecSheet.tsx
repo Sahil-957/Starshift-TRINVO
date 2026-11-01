@@ -4,7 +4,7 @@ import Reveal from "./Reveal";
 import SectionHead from "./SectionHead";
 import { getProduct } from "@/data/products";
 
-const subject = getProduct("midnight-steel")!;
+const subject = getProduct("midnight-slate")!;
 
 /**
  * Claims here are deliberately descriptive rather than numeric — no insulation
@@ -35,7 +35,7 @@ const groups: { title: string; rows: [string, string][] }[] = [
   {
     title: "Behind it",
     rows: [
-      ["Artwork", "Drawn in-house, one design per barrel"],
+      ["Designs", "TINVO originals, one per barrel"],
       ["Origin", "Made in India"],
       ["Made", "To order, after you buy it"],
       ["Faults", "Reportable within 7 days of delivery"],

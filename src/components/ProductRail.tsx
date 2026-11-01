@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import ProductCard from "./ProductCard";
 import SectionHead from "./SectionHead";
-import { featuredProducts } from "@/data/products";
+import { featuredProducts, products } from "@/data/products";
 
 /**
  * The range as a film strip rather than a grid — drag or swipe horizontally,
@@ -46,11 +46,11 @@ export default function ProductRail() {
           index="02"
           label="The designs"
           accent="var(--color-plum)"
-          title="Six we keep reaching for"
-          lede="Every design is drawn in-house and printed full-wrap on the same stainless barrel. Six of the eight are below."
+          title="Pick your favourite"
+          lede={`Every design is printed full-wrap on the same stainless barrel. ${featuredProducts.length} of the ${products.length} are below.`}
           aside={
             <Link href="/shop" className="wipe label text-ash hover:text-chalk">
-              All eight →
+              All {products.length} →
             </Link>
           }
         />

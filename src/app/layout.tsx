@@ -19,14 +19,14 @@ const mono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "TINVO — Art you can carry",
+    default: "TINVO — Make every sip your style",
     template: "%s · TINVO",
   },
   description:
-    "Art you can carry. Eight original designs, drawn in-house and printed full-wrap on one double-wall stainless barrel. Made in India.",
+    "Make every sip your style. Ten TINVO designs, from liquid-foil prints to solid colours, printed full-wrap on a 20 oz double-wall 304 stainless tumbler with a splash-proof lid and metal straw. Made in India.",
   openGraph: {
-    title: "TINVO — Art you can carry",
-    description: "Art you can carry — eight original designs on one double-wall stainless barrel.",
+    title: "TINVO — Make every sip your style",
+    description: "Ten designs on one 20 oz double-wall stainless tumbler. Not just another tumbler.",
     siteName: "TINVO",
     type: "website",
   },

@@ -17,7 +17,7 @@ export default function ShopPage() {
         index="01"
         label={`${products.length} designs`}
         title="Every design"
-        lede="One 20 oz barrel, one set of specs, and eight different pieces of artwork sublimated full-wrap across it."
+        lede={`One 20 oz barrel, one set of specs, and ${products.length} designs — liquid-foil prints and solid colours — sublimated full-wrap across it.`}
       />
       <section className="mx-auto max-w-[1500px] px-5 pb-24 sm:px-8 lg:pb-32">
         <CollectionBar />

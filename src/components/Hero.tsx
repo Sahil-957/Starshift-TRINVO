@@ -3,10 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRef } from "react";
+import ProductFrame from "./ProductFrame";
 import Swatches from "./Swatches";
 import { barrel, formatPrice, getProduct, products, siteImages } from "@/data/products";
 
-const lead = getProduct("prism")!;
+const lead = getProduct("aurora-gilt")!;
 
 /**
  * Opening frame: type on the left, the lead design lit on a plate to the
@@ -75,17 +76,17 @@ export default function Hero() {
           <div>
             <p className="label animate-sweep text-cobalt">01 — Collection</p>
 
-            <h1 className="display mt-6 animate-cut text-[clamp(2.75rem,9vw,7.5rem)] text-chalk">
-              Carry something
+            <h1 className="display mt-6 animate-cut text-[clamp(2.75rem,8vw,6.5rem)] text-chalk">
+              Make every
               <br />
-              <span style={{ color: lead.accent }}>worth carrying.</span>
+              sip <span style={{ color: lead.accent }}>your style.</span>
             </h1>
 
             <p className="mt-8 max-w-md text-[16px] leading-relaxed text-ash">
               One {barrel.capacity} barrel — 304 stainless, double-wall
-              vacuum, splash-proof lid, metal straw in the box. Then{" "}
-              {products.length} original designs sublimated full-wrap across
-              it, drawn in-house rather than picked off a colour chart.
+              insulated, splash-proof lid, metal straw in the box. Then{" "}
+              {products.length} designs, from liquid-foil prints to quiet solid
+              colours, printed full-wrap across it.
             </p>
 
             <div className="mt-9 flex flex-wrap items-center gap-3">
@@ -104,26 +105,18 @@ export default function Hero() {
             </div>
           </div>
 
-          {/* brand plate — the mark lit in the lead design's tone */}
+          {/* the lead design, lit in its own tone */}
           <figure className="relative mx-auto w-full max-w-xs lg:max-w-none">
-            <div className="grain relative isolate flex aspect-[4/5] items-center justify-center overflow-hidden border hairline bg-void">
-              <div aria-hidden="true" className="keylight absolute inset-0 z-0 opacity-70" />
-              <div
-                aria-hidden="true"
-                className="absolute bottom-[16%] left-1/2 z-0 h-[18%] w-[64%] -translate-x-1/2 rounded-[50%] blur-2xl"
-                style={{ background: `color-mix(in oklab, ${lead.accent} 34%, transparent)` }}
-              />
-              <Image
-                src="/tinvo-mark.svg"
-                alt=""
-                width={254}
-                height={237}
+            <Link href={`/shop/${lead.slug}`} aria-label={`See ${lead.name}`} className="block border hairline">
+              <ProductFrame
+                product={lead}
+                sizes="(max-width: 1024px) 20rem, 27rem"
                 priority
-                className="relative z-[1] w-[46%] max-w-[13rem]"
+                lightY="30%"
               />
-            </div>
+            </Link>
             <figcaption className="mt-4 flex items-baseline justify-between gap-4">
-              <span className="label text-chalk">Art you can carry</span>
+              <span className="label text-chalk">Not just another tumbler</span>
               <span className="label text-dim">Est. 2026 · India</span>
             </figcaption>
           </figure>

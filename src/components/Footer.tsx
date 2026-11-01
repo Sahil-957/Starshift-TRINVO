@@ -7,8 +7,8 @@ const columns = [
     links: [
       { href: "/shop", label: "All designs" },
       { href: "/collections", label: "Collections" },
-      { href: "/collections/minimal", label: "Minimal" },
-      { href: "/collections/bold", label: "Bold" },
+      { href: "/collections/solid", label: "Solid colour" },
+      { href: "/collections/liquid-foil", label: "Liquid foil" },
       { href: "/collections/gifts", label: "Gifts" },
       { href: "/#configurator", label: "Find your design" },
     ],
@@ -17,7 +17,7 @@ const columns = [
     title: "Studio",
     links: [
       { href: "/about", label: "What we make" },
-      { href: "/#manifesto", label: "Why we draw them" },
+      { href: "/#manifesto", label: "Why TINVO" },
       { href: "/#reviews", label: "Reviews" },
       { href: "/contact", label: "Contact" },
     ],
@@ -47,9 +47,9 @@ export default function Footer() {
               height={314}
               className="h-auto w-[104px] max-w-full sm:w-[120px]"
             />
-            <p className="label mt-7 text-chalk">Art you can carry</p>
+            <p className="label mt-7 text-chalk">Make every sip your style</p>
             <p className="mt-4 max-w-xs text-[15px] leading-relaxed text-ash">
-              Original designs, printed full-wrap on one stainless barrel.
+              TINVO designs, printed full-wrap on one stainless barrel.
               Made in India.
             </p>
           </div>

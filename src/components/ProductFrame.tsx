@@ -16,8 +16,8 @@ type Props = {
 /**
  * Every design sits inside one of these: a dark plate lit by a key light in
  * the design's own tone plus a cold counter-light from the opposite corner.
- * With no photography yet (phase 2) it renders a labelled development
- * placeholder instead of a stand-in photo, so a missing shot is obvious.
+ * Studio renders are transparent, so the plate is their backdrop. A product
+ * with no images renders a labelled placeholder so the gap is obvious.
  */
 export default function ProductFrame({
   product,
@@ -46,7 +46,7 @@ export default function ProductFrame({
           fill
           sizes={sizes}
           priority={priority}
-          className="z-[1] object-cover"
+          className={`z-[1] ${image.fit === "contain" ? "object-contain" : "object-cover"}`}
         />
       ) : (
         <EmptyPlate product={product} />
