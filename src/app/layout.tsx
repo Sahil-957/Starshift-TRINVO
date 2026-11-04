@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Announcement from "@/components/Announcement";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
+import { checkoutEnabled } from "@/lib/admin-api";
 import "./globals.css";
 
 const sans = Geist({
@@ -40,7 +41,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="flex min-h-full flex-col bg-void">
         <Announcement />
-        <Nav />
+        <Nav checkout={checkoutEnabled} />
         <main className="flex-1">{children}</main>
         <Footer />
       </body>

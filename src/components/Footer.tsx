@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { checkoutEnabled } from "@/lib/admin-api";
 
 const columns = [
   {
@@ -25,6 +26,7 @@ const columns = [
   {
     title: "Support",
     links: [
+      ...(checkoutEnabled ? [{ href: "/order", label: "Track your order" }] : []),
       { href: "/support/shipping", label: "Shipping" },
       { href: "/support/returns", label: "Returns & refunds" },
       { href: "/support/care", label: "Care" },

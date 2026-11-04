@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { CartLink } from "./AddToCart";
 
 const links = [
   { href: "/", label: "Home" },
@@ -14,7 +15,7 @@ const links = [
   { href: "/support", label: "Support" },
 ];
 
-export default function Nav() {
+export default function Nav({ checkout = false }: { checkout?: boolean }) {
   const [open, setOpen] = useState(false);
   const [solid, setSolid] = useState(false);
 
@@ -68,6 +69,7 @@ export default function Nav() {
         </ul>
 
         <div className="flex items-center gap-3">
+          {checkout && <CartLink />}
           <Link
             href="/shop"
             className="label hidden bg-chalk px-5 py-3 text-void transition-colors hover:bg-bronze hover:text-void sm:block"

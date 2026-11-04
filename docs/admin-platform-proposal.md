@@ -595,6 +595,17 @@ guarantee that is only ever verified by hand will eventually be wrong.
 
 ## 9. Decisions and remaining questions
 
+### Changed — 4 November 2026 (supersedes the rows below where they differ)
+
+| Question | Now | Why |
+| --- | --- | --- |
+| Database + files | **Neon** Postgres + Neon Object Storage (Singapore) | Branching gives a real `dev` and per-test branches, so the "no staging branch" gap in §6 is gone. |
+| Driver | `pg` + Drizzle (`drizzle-orm/node-postgres`) | Neon's recommendation for Vercel; `attachDatabasePool` for Fluid compute. |
+| Auth | Auth.js v5, credentials + JWT sessions | No adapter tables needed for email/password. |
+| RLS role | `tinvo_app` (no BYPASSRLS); owner role only migrates | Same policy idea as §2.3, keyed on `app.current_shop_id`. |
+| Repo | Admin lives in `tinvo-admin/` inside this repo as an npm workspace | One install, one disk footprint; still a separate Vercel project (root `tinvo-admin`). The storefront holds no backend code or credentials. |
+| Qikink | Has an API (token, create order, order list). Sandbox passes; live requested. | §9 "Blocked" below is resolved. |
+
 ### Settled — 24 October 2026
 
 | Question | Decision | Consequence |

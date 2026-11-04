@@ -2,12 +2,17 @@
   "name": "tinvo",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "tinvo-admin"
+  ],
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node --env-file-if-exists=.env.local scripts/sync-catalogue.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "admin": "npm run dev -w tinvo-admin"
   },
   "dependencies": {
     "next": "16.4.2",

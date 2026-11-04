@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // the admin app lints itself
+    "tinvo-admin/**",
   ]),
 ]);
 

@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+/* Same ground and ink as the TINVO storefront */
+@theme {
+  --color-void: #08080a;
+  --color-panel: #0e0e11;
+  --color-raise: #16161a;
+  --color-chalk: #e2fff4;
+  --color-ash: #a9bbb4;
+  --color-dim: #7d8c86;
+  --color-bronze: #c08a4e;
+  --color-rose: #d0507a;
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--color-void);
+  color: var(--color-chalk);
+  font-family: var(--font-sans);
+}
+
+@utility label {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  line-height: 1;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+@utility hairline {
+  border-color: color-mix(in oklab, var(--color-chalk) 14%, transparent);
+}
+
+@utility field {
+  width: 100%;
+  border: 1px solid color-mix(in oklab, var(--color-chalk) 18%, transparent);
+  background: transparent;
+  padding: 0.75rem 1rem;
+  font-size: 15px;
+  outline: none;
+  &:focus {
+    border-color: var(--color-chalk);
+  }
+}
+
+@utility button {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  background: var(--color-chalk);
+  color: var(--color-void);
+  padding: 0.9rem 1.5rem;
+  &:hover {
+    opacity: 0.88;
+  }
+  &:disabled {
+    opacity: 0.5;
+  }
+}

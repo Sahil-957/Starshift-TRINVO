@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import AddToCart from "@/components/AddToCart";
 import DesignPicker from "@/components/DesignPicker";
+import { checkoutEnabled } from "@/lib/admin-api";
 import ProductGallery from "@/components/ProductGallery";
 import ReturnsSummary from "@/components/ReturnsSummary";
 import ProductCard from "@/components/ProductCard";
@@ -54,7 +56,8 @@ export default async function ProductPage({ params }: PageProps<"/shop/[slug]">)
       "@type": "Offer",
       price: product.price,
       priceCurrency: "INR",
-      availability: "https://schema.org/PreOrder",
+      // printed to order once checkout is live; pre-order until then
+      availability: checkoutEnabled ? "https://schema.org/MadeToOrder" : "https://schema.org/PreOrder",
     },
   };
 
@@ -95,10 +98,14 @@ export default async function ProductPage({ params }: PageProps<"/shop/[slug]">)
             <DesignPicker current={product} />
           </div>
 
-          <div className="mt-9 grid gap-3 sm:grid-cols-[1fr_auto]">
-            <span className="label flex items-center justify-center bg-chalk/10 px-8 py-4 text-ash">
-              Checkout opens soon
-            </span>
+          <div className="mt-9 grid items-start gap-3 sm:grid-cols-[1fr_auto]">
+            {checkoutEnabled ? (
+              <AddToCart slug={product.slug} accent={product.accent} />
+            ) : (
+              <span className="label flex items-center justify-center bg-chalk/10 px-8 py-4 text-ash">
+                Checkout opens soon
+              </span>
+            )}
             <Link
               href={`/contact?design=${product.slug}`}
               className="label border hairline px-8 py-4 text-center text-chalk transition-colors hover:bg-chalk hover:text-void"
@@ -197,13 +204,17 @@ export default async function ProductPage({ params }: PageProps<"/shop/[slug]">)
             <p className="truncate text-[14px] text-chalk">{product.name}</p>
             <p className="font-mono text-[13px] tabular-nums text-ash">{formatPrice(product.price)}</p>
           </div>
-          <Link
-            href={`/contact?design=${product.slug}`}
-            className="label shrink-0 px-5 py-3.5 text-void"
-            style={{ backgroundColor: product.accent }}
-          >
-            Ask about it
-          </Link>
+          {checkoutEnabled ? (
+            <AddToCart slug={product.slug} accent={product.accent} className="shrink-0" />
+          ) : (
+            <Link
+              href={`/contact?design=${product.slug}`}
+              className="label shrink-0 px-5 py-3.5 text-void"
+              style={{ backgroundColor: product.accent }}
+            >
+              Ask about it
+            </Link>
+          )}
         </div>
       </div>
 

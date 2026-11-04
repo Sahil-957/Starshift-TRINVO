@@ -9,6 +9,7 @@
  * `scripts/studio.py` (Blender). `-lifestyle` is Qikink's own mockup.
  * Re-run the script after changing any wrap file.
  */
+import synced from "./catalogue.json" with { type: "json" };
 
 /** One photograph of a product. Files live in `public/products/`. */
 export type ProductImage = {
@@ -76,7 +77,8 @@ const shots = (slug: string, name: string): ProductImage[] => [
   { file: `${slug}-lifestyle.webp`, alt: `${name} TINVO tumbler on a table`, kind: "lifestyle" },
 ];
 
-export const products: Product[] = [
+/** The designs as the storefront ships them; `products` below applies the admin on top. */
+const baseProducts: Product[] = [
   {
     slug: "aurora-gilt",
     name: "Aurora Gilt",
@@ -224,6 +226,31 @@ export const products: Product[] = [
     traits: ["minimal", "earth", "outdoors", "travel"],
   },
 ];
+
+/**
+ * Commerce data synced from the admin at build time (scripts/sync-catalogue.mjs).
+ * When present, the admin decides names, copy, price and what is on sale;
+ * images, colours and quiz traits stay here. Empty `{}` means "not connected".
+ */
+type Synced = {
+  products?: Record<string, { name: string; tagline: string; description: string; priceMinor: number }>;
+};
+const admin = (synced as Synced).products;
+
+export const products: Product[] = admin
+  ? baseProducts
+      .filter((p) => admin[p.slug])
+      .map((p) => {
+        const a = admin[p.slug];
+        return {
+          ...p,
+          name: a.name,
+          tagline: a.tagline || p.tagline,
+          description: a.description || p.description,
+          price: a.priceMinor / 100,
+        };
+      })
+  : baseProducts;
 
 export const featuredProducts = products.filter((p) => p.featured);
 
