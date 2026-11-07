@@ -5,20 +5,36 @@
  *   npm run owner:create
  */
 import { stdin, stdout } from "node:process";
-import { createInterface } from "node:readline/promises";
+import { Writable } from "node:stream";
+import { createInterface } from "node:readline";
 import { pool } from "../src/db/index.ts";
 import { createOwner } from "../src/core/users.ts";
 
-const rl = createInterface({ input: stdin, output: stdout });
-const ask = (q: string) => rl.question(q);
+// readline writes through this stream, so muting it hides what is typed while
+// prompts written straight to stdout stay on screen
+let muted = false;
+const output = new Writable({
+  write(chunk, encoding, done) {
+    if (!muted) stdout.write(chunk, encoding);
+    done();
+  },
+});
+const rl = createInterface({ input: stdin, output, terminal: stdin.isTTY });
+// lines are queued, so answers typed (or pasted) ahead are never lost
+const lines = rl[Symbol.asyncIterator]();
+const ask = async (q: string) => {
+  rl.setPrompt(q);
+  rl.prompt();
+  return String((await lines.next()).value ?? "");
+};
 
-/** Reads a line without echoing it. */
+/** Reads a line without echoing it: the prompt shows, the typing doesn't. */
 async function askHidden(q: string) {
-  const write = (stdout as unknown as { write: (s: string) => boolean }).write.bind(stdout);
-  stdout.write(q);
-  (rl as unknown as { _writeToOutput: (s: string) => void })._writeToOutput = () => {};
-  const answer = await rl.question("");
-  (rl as unknown as { _writeToOutput: (s: string) => void })._writeToOutput = (s) => write(s);
+  rl.setPrompt(`${q}(hidden while you type) `);
+  rl.prompt();
+  muted = true;
+  const answer = String((await lines.next()).value ?? "");
+  muted = false;
   stdout.write("\n");
   return answer;
 }

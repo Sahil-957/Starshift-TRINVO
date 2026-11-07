@@ -12,8 +12,8 @@ declare module "next-auth" {
 const login = z.object({ email: z.email(), password: z.string().min(1).max(200) });
 
 // Email + password only, so sessions are signed JWT cookies and no adapter tables
-// are needed. ponytail: no sign-in rate limit yet; add one (Upstash or a
-// failed_logins table) before the admin is on a public domain.
+// are needed. Wrong passwords are rate limited in the sign-in action
+// (src/core/ratelimit.ts).
 export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: { signIn: "/sign-in" },
   session: { strategy: "jwt", maxAge: 60 * 60 * 12 },

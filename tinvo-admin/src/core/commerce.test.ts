@@ -1,32 +1,34 @@
 /**
  * The order lifecycle end to end, on the dev database and the real Qikink
- * sandbox. Only Razorpay's HTTP calls are simulated (no test keys yet); its
- * signatures are computed and verified for real.
+ * sandbox. PayU's signatures are computed here from PayU's published formulas
+ * (independently of src/lib/payu.ts); only PayU's server replies (verify,
+ * refund) are simulated.
  *
  *   npm test
  */
 import assert from "node:assert/strict";
-import { createHmac } from "node:crypto";
+import { createHash } from "node:crypto";
 import { after, before, describe, it, mock } from "node:test";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import pg from "pg";
 import { pool, withShop } from "../db/index.ts";
 import { orderEvents, orders } from "../db/schema.ts";
 import { envCreds } from "../lib/qikink.ts";
 import { putFile } from "../lib/storage.ts";
-import { createApiKey, revokeApiKey, listApiKeys, shopForToken } from "./apikeys.ts";
+import { createApiKey, listApiKeys, revokeApiKey, shopForToken } from "./apikeys.ts";
 import { createProduct, storefrontProducts } from "./catalogue.ts";
 import { setCredentials } from "./credentials.ts";
 import {
   cancelOrder,
   CheckoutError,
-  confirmPayment,
   createCheckout,
   fulfil,
   getOrderDetail,
-  handleRazorpayWebhook,
+  handlePayuWebhook,
   lookupOrder,
+  payuReturn,
   refundOrder,
+  syncShop,
 } from "./orders.ts";
 import { shopReport } from "./reports.ts";
 import { setCheckoutSettings, updateShopDetails } from "./settings.ts";
@@ -36,28 +38,44 @@ import { createOwner } from "./users.ts";
 if (process.env.NEON_BRANCH === "production") throw new Error("Refusing to run tests against production");
 
 const run = Date.now().toString(36).slice(-6);
-const rzp = { keyId: "rzp_test_fake", keySecret: "test-key-secret", webhookSecret: "test-webhook-secret" };
+const payu = { key: "testKey1", salt: "testSaltValue0123456789abcdefXYZ", env: "test" as const };
+const back = "http://localhost:3000/api/checkout/payu";
 const raw = "https://raw.githubusercontent.com/Sahil-957/Starshift-TRINVO/main/";
+const sha512 = (s: string) => createHash("sha512").update(s).digest("hex");
 let orgId = "";
 let owner = "";
 let shopId = "";
 let bareShopId = "";
 
-// Razorpay is simulated; everything else (Qikink, Neon) goes out for real
+// PayU's server-to-server replies are simulated; Qikink and Neon go out for real
 const realFetch = globalThis.fetch;
-let rpOrders = 0;
+const payuCalls: Record<string, string>[] = [];
+const verified = new Map<string, { status: string; amt: string; mihpayid: string }>();
 mock.method(globalThis, "fetch", async (url: string | URL | Request, init?: RequestInit) => {
   const u = String(url);
-  if (!u.startsWith("https://api.razorpay.com/")) return realFetch(url, init);
-  const body = JSON.parse(String(init?.body ?? "{}"));
-  if (u.endsWith("/orders")) return Response.json({ id: `order_t${run}${++rpOrders}`, amount: body.amount, currency: body.currency, status: "created" });
-  if (u.includes("/refund")) return Response.json({ id: `rfnd_t${run}`, status: "processed", amount: body.amount });
-  return Response.json({ error: { description: "unexpected" } }, { status: 400 });
+  if (!u.startsWith("https://test.payu.in/merchant/postservice")) return realFetch(url, init);
+  const f = Object.fromEntries(new URLSearchParams(String(init?.body)));
+  payuCalls.push(f);
+  if (f.hash !== sha512(`${f.key}|${f.command}|${f.var1}|${payu.salt}`)) return Response.json({ status: 0, msg: "Invalid Hash" });
+  if (f.command === "verify_payment") {
+    const t = verified.get(f.var1);
+    return Response.json({ status: 1, transaction_details: { [f.var1]: t ?? { status: "Not Found", amt: "0", mihpayid: "" } } });
+  }
+  if (f.command === "cancel_refund_transaction") return Response.json({ status: 1, msg: "Refund Request Queued", request_id: `rq${run}` });
+  return Response.json({ status: 0, msg: "unexpected" });
 });
 
-const sign = (s: string, secret: string) => createHmac("sha256", secret).update(s).digest("hex");
+/** What PayU posts back: the response fields, signed with the reverse hash. */
+function payuReply(fields: Record<string, string>, status: string, amount = fields.amount, mihpayid = `40${run}`) {
+  const p: Record<string, string> = { ...fields, status, amount, mihpayid };
+  // SALT|status||||||udf5|udf4|udf3|udf2|udf1|email|firstname|productinfo|amount|txnid|key  (udfs empty)
+  p.hash = sha512(`${payu.salt}|${status}|||||||||||${p.email}|${p.firstname}|${p.productinfo}|${amount}|${p.txnid}|${p.key}`);
+  return p;
+}
+
 const address = { line1: "Flat 4, Sea View, Linking Road", line2: "Bandra West", city: "Mumbai", state: "MH", pin: "400050" };
 const customer = { name: "Test Buyer", email: `buyer-${run}@test.invalid`, phone: "+91 98765 43210" };
+const orderNo = (n: string) => withShop(shopId, async (tx) => (await tx.select().from(orders).where(eq(orders.number, n)))[0]);
 
 before(async () => {
   const o = await createOwner({ email: `owner-${run}@test.invalid`, name: "Owner", password: "correct-horse-battery", orgName: `Commerce ${run}` });
@@ -67,7 +85,7 @@ before(async () => {
   bareShopId = (await createShop(owner, orgId, { name: "Bare", slug: `bare-${run}`, settlementCurrency: "INR" })).id;
   await updateShopDetails(owner, shopId, { name: "Shop", gstin: "27ABCDE1234F1Z5", originState: "MH", orderPrefix: "TST", primaryDomain: "" });
   await setCheckoutSettings(shopId, { shippingFlatMinor: 9900, freeShippingOverMinor: 200000, storefrontDeployHook: null });
-  await setCredentials(shopId, "razorpay", rzp);
+  await setCredentials(shopId, "payu", payu);
   await setCredentials(shopId, "qikink", envCreds());
 
   // a tiny print file in this shop's private storage
@@ -122,53 +140,57 @@ describe("catalogue", () => {
   });
 });
 
-describe("checkout to delivery", () => {
+describe("checkout to delivery (PayU)", () => {
   let first: Awaited<ReturnType<typeof createCheckout>>;
 
-  it("prices from the database, adds shipping and GST, numbers per shop", async () => {
-    first = await createCheckout(shopId, { items: [{ slug: "cocoa", quantity: 1 }], customer, address });
+  it("prices from the database, adds shipping and GST, signs a PayU request", async () => {
+    first = await createCheckout(shopId, { items: [{ slug: "cocoa", quantity: 1 }], customer, address }, back);
     assert.equal(first.orderNumber, "TST-1001");
     assert.equal(first.totalMinor, 149000 + 9900);
-    assert.equal(first.razorpay.amount, first.totalMinor);
+    const f = first.payu.fields;
+    assert.equal(first.payu.action, "https://test.payu.in/_payment");
+    assert.equal(f.amount, "1589.00");
+    assert.equal(f.surl, back);
+    // key|txnid|amount|productinfo|firstname|email|udf1..udf5||||||SALT  (udfs empty)
+    assert.equal(f.hash, sha512(`${f.key}|${f.txnid}|${f.amount}|${f.productinfo}|${f.firstname}|${f.email}|||||||||||${payu.salt}`));
   });
 
-  it("refuses draft products and empty carts", async () => {
-    await assert.rejects(createCheckout(shopId, { items: [{ slug: "hidden", quantity: 1 }], customer, address }), CheckoutError);
-    await assert.rejects(createCheckout(shopId, { items: [], customer, address }));
+  it("refuses draft products, empty carts and a non-https return URL", async () => {
+    await assert.rejects(createCheckout(shopId, { items: [{ slug: "hidden", quantity: 1 }], customer, address }, back), CheckoutError);
+    await assert.rejects(createCheckout(shopId, { items: [], customer, address }, back));
+    await assert.rejects(createCheckout(shopId, { items: [{ slug: "cocoa", quantity: 1 }], customer, address }, "http://evil.example/x"));
   });
 
-  it("refuses a forged payment signature", async () => {
-    await assert.rejects(
-      confirmPayment(shopId, { razorpayOrderId: first.razorpay.orderId, razorpayPaymentId: "pay_x", razorpaySignature: "00".repeat(32) }),
-      CheckoutError,
-    );
+  it("refuses a forged PayU response", async () => {
+    const forged = { ...payuReply(first.payu.fields, "success"), hash: "ab".repeat(64) };
+    await assert.rejects(payuReturn(shopId, forged), CheckoutError);
+    assert.equal((await orderNo("TST-1001")).status, "pending_payment");
   });
 
-  it("accepts a signed payment and sends the order to the Qikink sandbox", async () => {
-    const paymentId = `pay_t${run}`;
-    const r = await confirmPayment(shopId, {
-      razorpayOrderId: first.razorpay.orderId,
-      razorpayPaymentId: paymentId,
-      razorpaySignature: sign(`${first.razorpay.orderId}|${paymentId}`, rzp.keySecret),
-    });
-    assert.equal(r.number, "TST-1001");
-    const [o] = await withShop(shopId, (tx) => tx.select().from(orders).where(eq(orders.number, "TST-1001")));
+  it("does not mark paid on a failed payment or a different amount", async () => {
+    assert.equal((await payuReturn(shopId, payuReply(first.payu.fields, "failure"))).paid, false);
+    assert.equal((await payuReturn(shopId, payuReply(first.payu.fields, "success", "1.00"))).paid, false);
+    assert.equal((await orderNo("TST-1001")).status, "pending_payment");
+  });
+
+  it("accepts a signed success and sends the order to the Qikink sandbox", async () => {
+    const r = await payuReturn(shopId, payuReply(first.payu.fields, "success"));
+    assert.deepEqual(r, { number: "TST-1001", email: customer.email, paid: true });
+    const o = await orderNo("TST-1001");
     assert.equal(o.fulfilmentError, null, o.fulfilmentError ?? "");
     assert.equal(o.status, "in_production");
+    assert.equal(o.paymentGatewayId, `40${run}`);
     assert.match(o.supplierOrderId ?? "", /^\d+$/, "Qikink sandbox order id");
   });
 
-  it("ignores a repeated webhook for an order already paid", async () => {
-    const body = JSON.stringify({
-      event: "payment.captured",
-      payload: { payment: { entity: { id: `pay_t${run}`, order_id: first.razorpay.orderId } } },
-    });
-    assert.equal(await handleRazorpayWebhook(shopId, body, "bad", "evt_1"), "invalid");
-    assert.equal(await handleRazorpayWebhook(shopId, body, sign(body, rzp.webhookSecret), `evt_${run}`), "ok");
-    assert.equal(await handleRazorpayWebhook(shopId, body, sign(body, rzp.webhookSecret), `evt_${run}`), "duplicate");
-    const [o] = await withShop(shopId, (tx) => tx.select().from(orders).where(eq(orders.number, "TST-1001")));
-    const paid = await withShop(shopId, (tx) => tx.select().from(orderEvents).where(eq(orderEvents.orderId, o.id)));
-    assert.equal(paid.filter((e) => e.type === "paid").length, 1, "paid exactly once");
+  it("handles the PayU webhook once, and refuses a bad one", async () => {
+    const reply = payuReply(first.payu.fields, "success");
+    assert.equal(await handlePayuWebhook(shopId, { ...reply, hash: "00" }), "invalid");
+    assert.equal(await handlePayuWebhook(shopId, reply), "ok");
+    assert.equal(await handlePayuWebhook(shopId, reply), "duplicate");
+    const o = await orderNo("TST-1001");
+    const events = await withShop(shopId, (tx) => tx.select().from(orderEvents).where(eq(orderEvents.orderId, o.id)));
+    assert.equal(events.filter((e) => e.type === "paid").length, 1, "paid exactly once");
   });
 
   it("lets the customer look up the order with number and email only", async () => {
@@ -176,11 +198,13 @@ describe("checkout to delivery", () => {
     assert.equal(await lookupOrder(shopId, "TST-1001", "someone@else.invalid"), null);
   });
 
-  it("refunds a paid order and reports it honestly", async () => {
-    const [o] = await withShop(shopId, (tx) => tx.select().from(orders).where(eq(orders.number, "TST-1001")));
+  it("refunds through PayU and reports it honestly", async () => {
+    const o = await orderNo("TST-1001");
     await refundOrder(owner, shopId, o.id, "test");
-    const d = await getOrderDetail(shopId, o.id);
-    assert.equal(d?.order.status, "refunded");
+    const call = payuCalls.find((c) => c.command === "cancel_refund_transaction");
+    assert.equal(call?.var1, `40${run}`, "refunds PayU's payment id");
+    assert.equal(call?.var3, "1589.00");
+    assert.equal((await getOrderDetail(shopId, o.id))?.order.status, "refunded");
     const rep = await shopReport(shopId, "INR", 30);
     assert.equal(rep.orders, 1);
     assert.equal(rep.refunds, first.totalMinor);
@@ -188,17 +212,29 @@ describe("checkout to delivery", () => {
     assert.equal(rep.costOfGoods, 48144);
   });
 
-  it("cancels only unpaid orders", async () => {
-    const second = await createCheckout(shopId, { items: [{ slug: "cocoa", quantity: 2 }], customer, address });
-    assert.equal(second.orderNumber, "TST-1002");
+  it("catches a payment whose customer never came back (reconciliation)", async () => {
+    const second = await createCheckout(shopId, { items: [{ slug: "cocoa", quantity: 2 }], customer, address }, back);
     assert.equal(second.totalMinor, 298000, "free shipping over ₹2,000");
-    const [o] = await withShop(shopId, (tx) => tx.select().from(orders).where(eq(orders.number, "TST-1002")));
+    // the customer paid but closed the tab; the job runs a few minutes later
+    verified.set(second.payu.fields.txnid, { status: "success", amt: "2980.00", mihpayid: `41${run}` });
+    await withShop(shopId, (tx) =>
+      tx.update(orders).set({ createdAt: sql`now() - interval '5 minutes'` }).where(eq(orders.number, second.orderNumber)),
+    );
+    await syncShop(shopId);
+    const o = await orderNo(second.orderNumber);
+    assert.equal(o.paymentGatewayId, `41${run}`);
+    assert.equal(o.status, "in_production", o.fulfilmentError ?? "");
+  });
+
+  it("cancels only unpaid orders", async () => {
+    const third = await createCheckout(shopId, { items: [{ slug: "cocoa", quantity: 1 }], customer, address }, back);
+    const o = await orderNo(third.orderNumber);
     await cancelOrder(owner, shopId, o.id);
     await assert.rejects(cancelOrder(owner, shopId, o.id), CheckoutError);
   });
 
-  it("records a clear error when the shop has no Qikink account", async () => {
-    await assert.rejects(createCheckout(bareShopId, { items: [{ slug: "cocoa", quantity: 1 }], customer, address }), /Payments are not set up/);
+  it("says clearly when a shop has no payment gateway", async () => {
+    await assert.rejects(createCheckout(bareShopId, { items: [{ slug: "cocoa", quantity: 1 }], customer, address }, back), /Payments are not set up/);
     await fulfil(bareShopId, "00000000-0000-4000-8000-000000000000"); // no such order: no-op
   });
 });

@@ -6,7 +6,7 @@ import {
   checkoutSettingsAction,
   createTokenAction,
   qikinkAction,
-  razorpayAction,
+  payuAction,
   revokeTokenAction,
   shopDetailsAction,
 } from "../actions";
@@ -41,8 +41,8 @@ export default async function SettingsPage({ params }: PageProps<"/s/[shopId]/se
     listApiKeys(shopId),
   ]);
   // key ids only (never secrets) to show what is connected
-  const [rzp, qk] = isAdmin
-    ? await Promise.all([getCredentials(shopId, "razorpay"), getCredentials(shopId, "qikink")])
+  const [pu, qk] = isAdmin
+    ? await Promise.all([getCredentials(shopId, "payu"), getCredentials(shopId, "qikink")])
     : [null, null];
   const h = await headers();
   const origin = `${h.get("x-forwarded-proto") ?? "http"}://${h.get("host")}`;
@@ -100,24 +100,27 @@ export default async function SettingsPage({ params }: PageProps<"/s/[shopId]/se
           <div className="grid gap-10">
             <div>
               <p className="text-[15px]">
-                Razorpay{" "}
+                PayU{" "}
                 <span className="label ml-2 text-dim">
-                  {rzp ? `${rzp.keyId.startsWith("rzp_live_") ? "live" : "test mode"} · ${rzp.keyId}` : "not connected"}
+                  {pu ? `${pu.env === "live" ? "LIVE" : "test mode"} · key ${pu.key}` : "not connected"}
                 </span>
               </p>
               <p className="mt-2 text-[13px] text-dim">
-                Webhook URL (events payment.captured, order.paid):{" "}
-                <code className="break-all text-ash">{`${origin}/api/webhooks/razorpay/${shopId}`}</code>
+                From PayU → Developer → API Details. Webhook URL for successful and failed payments (PayU →
+                Settings → Webhooks): <code className="break-all text-ash">{`${origin}/api/webhooks/payu/${shopId}`}</code>
               </p>
-              <ActionForm action={razorpayAction.bind(null, shopId)} submit="Save Razorpay" className="mt-5 grid gap-5 sm:grid-cols-3">
-                <Field label="Key ID">
-                  <input name="keyId" required defaultValue={rzp?.keyId ?? ""} placeholder="rzp_test_…" className="field" />
+              <ActionForm action={payuAction.bind(null, shopId)} submit="Save PayU" className="mt-5 grid gap-5 sm:grid-cols-3">
+                <Field label="Merchant key">
+                  <input name="key" required defaultValue={pu?.key ?? ""} autoComplete="off" className="field" />
                 </Field>
-                <Field label="Key secret" hint={rzp ? "Leave empty to keep" : undefined}>
-                  <input name="keySecret" type="password" autoComplete="off" className="field" />
+                <Field label="Salt (32 bit)" hint={pu ? "Leave empty to keep" : undefined}>
+                  <input name="salt" type="password" autoComplete="off" className="field" />
                 </Field>
-                <Field label="Webhook secret" hint={rzp?.webhookSecret ? "Leave empty to keep" : undefined}>
-                  <input name="webhookSecret" type="password" autoComplete="off" className="field" />
+                <Field label="Environment">
+                  <select name="env" defaultValue={pu?.env ?? "live"} className="field bg-void">
+                    <option value="test">Test</option>
+                    <option value="live">Live (real payments)</option>
+                  </select>
                 </Field>
               </ActionForm>
             </div>
@@ -141,7 +144,7 @@ export default async function SettingsPage({ params }: PageProps<"/s/[shopId]/se
                 </Field>
               </ActionForm>
             </div>
-            {has("razorpay") && has("qikink") && <p className="text-[13px] text-dim">Both connected. Secrets are encrypted and never shown again.</p>}
+            {has("payu") && has("qikink") && <p className="text-[13px] text-dim">Both connected. Secrets are encrypted and never shown again.</p>}
           </div>
         </Section>
       )}

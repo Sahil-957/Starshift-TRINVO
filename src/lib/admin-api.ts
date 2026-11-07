@@ -17,3 +17,6 @@ export async function adminFetch(path: string, init: RequestInit = {}) {
     cache: "no-store",
   });
 }
+
+/** The public origin (https://…). Behind the server's proxy the request itself says http. */
+export const siteOrigin = (req: Request) => process.env.SITE_URL?.replace(/\/$/, "") ?? new URL(req.url).origin;

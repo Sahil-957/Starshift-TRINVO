@@ -3,10 +3,12 @@
  * plus refunds and cancellation. Every step writes an order_event.
  *
  * Money is always computed here from database prices, never taken from a storefront.
- * Payment is accepted only with a valid Razorpay signature, and marking paid is a
- * conditional update, so the checkout callback and the webhook can both arrive safely.
+ * Payment (PayU) is accepted only with a valid signature, PayU's "success" and the
+ * exact order total; marking paid is a conditional update, so the customer's return,
+ * the webhook and the reconciliation job can all arrive safely.
  */
-import { and, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
+import { randomBytes } from "node:crypto";
+import { and, desc, eq, gte, inArray, isNotNull, lt, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db, withShop, type Tx } from "../db/index.ts";
 import {
@@ -22,7 +24,7 @@ import {
 } from "../db/schema.ts";
 import { normalisePhone, PIN, STATES } from "../lib/india.ts";
 import * as qikink from "../lib/qikink.ts";
-import * as razorpay from "../lib/razorpay.ts";
+import * as payu from "../lib/payu.ts";
 import { signedUrl } from "../lib/storage.ts";
 import { getCredentials } from "./credentials.ts";
 import { priceOrder } from "./pricing.ts";
@@ -59,10 +61,16 @@ export const checkoutInput = z.object({
 });
 export type CheckoutInput = z.input<typeof checkoutInput>;
 
-export async function createCheckout(shopId: string, raw: CheckoutInput) {
+/** Where PayU posts the customer back: the storefront's own return route. */
+const returnUrl = z
+  .url()
+  .refine((u) => u.startsWith("https://") || /^http:\/\/localhost(:\d+)?\//.test(u), "Return URL must be https");
+
+export async function createCheckout(shopId: string, raw: CheckoutInput, payuReturnUrl: string) {
   const input = checkoutInput.parse(raw);
-  const rzp = await getCredentials(shopId, "razorpay");
-  if (!rzp) throw new CheckoutError("Payments are not set up for this shop yet.");
+  const back = returnUrl.parse(payuReturnUrl);
+  const payuCreds = await getCredentials(shopId, "payu");
+  if (!payuCreds) throw new CheckoutError("Payments are not set up for this shop yet.");
   const [shop] = await db.select().from(shops).where(eq(shops.id, shopId));
   const settings = await getCheckoutSettings(shopId);
 
@@ -133,28 +141,39 @@ export async function createCheckout(shopId: string, raw: CheckoutInput) {
     return o;
   });
 
-  const rp = await razorpay.createOrder(rzp, order.totalMinor, order.currency, order.number);
+  // txnid: unique per payment attempt, letters and digits only (≤25)
+  const txnid = `${order.number.replace(/[^A-Za-z0-9]/g, "")}${randomBytes(3).toString("hex")}`;
+  const fields = payu.signRequest(payuCreds, {
+    txnid,
+    amount: payu.amount(order.totalMinor),
+    productinfo: `Order ${order.number}`,
+    firstname: input.customer.name.split(/\s+/)[0],
+    email: input.customer.email,
+    phone: input.customer.phone,
+    surl: back,
+    furl: back,
+  });
   await withShop(shopId, async (tx) => {
-    await tx.update(orders).set({ razorpayOrderId: rp.id }).where(eq(orders.id, order.id));
-    await event(tx, shopId, order.id, "payment.started", { razorpayOrderId: rp.id });
+    await tx.update(orders).set({ paymentTxnId: txnid }).where(eq(orders.id, order.id));
+    await event(tx, shopId, order.id, "payment.started", { txnid, env: payuCreds.env });
   });
   return {
     orderNumber: order.number,
     totalMinor: order.totalMinor,
     currency: order.currency,
-    razorpay: { keyId: rzp.keyId, orderId: rp.id, amount: rp.amount, currency: rp.currency },
+    payu: { action: payu.paymentUrl(payuCreds), fields },
   };
 }
 
 // ─── payment ────────────────────────────────────────────────────────────────
 
 /** Marks the order paid once, whoever reports it first. Returns the order id if this call did it. */
-async function markPaid(shopId: string, razorpayOrderId: string, paymentId: string, source: string) {
+async function markPaid(shopId: string, txnid: string, paymentId: string, source: string) {
   const id = await withShop(shopId, async (tx) => {
     const [o] = await tx
       .update(orders)
-      .set({ status: "paid", razorpayPaymentId: paymentId, paidAt: sql`now()`, updatedAt: sql`now()` })
-      .where(and(eq(orders.razorpayOrderId, razorpayOrderId), eq(orders.status, "pending_payment")))
+      .set({ status: "paid", paymentGatewayId: paymentId, paidAt: sql`now()`, updatedAt: sql`now()` })
+      .where(and(eq(orders.paymentTxnId, txnid), eq(orders.status, "pending_payment")))
       .returning({ id: orders.id });
     if (o) await event(tx, shopId, o.id, "paid", { paymentId, source });
     return o?.id ?? null;
@@ -163,39 +182,49 @@ async function markPaid(shopId: string, razorpayOrderId: string, paymentId: stri
   return id;
 }
 
-/** Browser callback after Razorpay checkout. */
-export async function confirmPayment(
-  shopId: string,
-  p: { razorpayOrderId: string; razorpayPaymentId: string; razorpaySignature: string },
-) {
-  const rzp = await getCredentials(shopId, "razorpay");
-  if (!rzp || !razorpay.verifyPayment(rzp, p.razorpayOrderId, p.razorpayPaymentId, p.razorpaySignature)) {
-    throw new CheckoutError("We couldn't verify that payment.");
+/**
+ * PayU's answer, from the customer's return post or a webhook. Paid only when
+ * the signature is valid, PayU says success, and the amount is the order total.
+ */
+async function settlePayu(shopId: string, p: Record<string, string>, source: string) {
+  const creds = await getCredentials(shopId, "payu");
+  if (!creds || !payu.verifyResponse(creds, p)) return { valid: false as const };
+  const [o] = await withShop(shopId, (tx) => tx.select().from(orders).where(eq(orders.paymentTxnId, p.txnid)));
+  if (!o) return { valid: false as const };
+  const ok = p.status === "success" && p.amount === payu.amount(o.totalMinor);
+  if (ok) {
+    await markPaid(shopId, p.txnid, p.mihpayid, source);
+  } else if (o.status === "pending_payment") {
+    await withShop(shopId, (tx) =>
+      event(tx, shopId, o.id, "payment.failed", { status: p.status, error: p.error_Message || p.error || null, source }),
+    );
   }
-  await markPaid(shopId, p.razorpayOrderId, p.razorpayPaymentId, "checkout");
-  const [o] = await withShop(shopId, (tx) =>
-    tx.select({ number: orders.number, status: orders.status }).from(orders).where(eq(orders.razorpayOrderId, p.razorpayOrderId)),
+  const [after] = await withShop(shopId, (tx) =>
+    tx.select({ number: orders.number, email: orders.email, status: orders.status }).from(orders).where(eq(orders.id, o.id)),
   );
-  return o;
+  return { valid: true as const, ...after, paid: after.status !== "pending_payment" && after.status !== "cancelled" };
 }
 
-/** Razorpay webhook (payment.captured / order.paid). Idempotent on the event id. */
-export async function handleRazorpayWebhook(shopId: string, rawBody: string, signature: string, eventId: string) {
-  const rzp = await getCredentials(shopId, "razorpay");
-  if (!rzp?.webhookSecret || !razorpay.verifyWebhook(rzp, rawBody, signature)) return "invalid";
-  const body = JSON.parse(rawBody);
+/** The customer's browser coming back from PayU (forwarded by the storefront). */
+export async function payuReturn(shopId: string, fields: Record<string, string>) {
+  const r = await settlePayu(shopId, fields, "return");
+  if (!r.valid) throw new CheckoutError("We couldn't verify that payment.");
+  return { number: r.number, email: r.email, paid: r.paid };
+}
+
+/** PayU webhook (form-encoded or JSON). Idempotent per payment and status. */
+export async function handlePayuWebhook(shopId: string, fields: Record<string, string>) {
+  const creds = await getCredentials(shopId, "payu");
+  if (!creds || !payu.verifyResponse(creds, fields)) return "invalid";
   const fresh = await withShop(shopId, (tx) =>
     tx
       .insert(webhookEvents)
-      .values({ shopId, provider: "razorpay", externalId: eventId, payload: body })
+      .values({ shopId, provider: "payu", externalId: `${fields.mihpayid}:${fields.status}`, payload: fields })
       .onConflictDoNothing()
       .returning({ id: webhookEvents.id }),
   );
   if (!fresh.length) return "duplicate";
-  const payment = body?.payload?.payment?.entity;
-  if (["payment.captured", "order.paid"].includes(body.event) && payment?.order_id && payment?.id) {
-    await markPaid(shopId, payment.order_id, payment.id, `webhook:${body.event}`);
-  }
+  await settlePayu(shopId, fields, "webhook");
   return "ok";
 }
 
@@ -312,8 +341,40 @@ export async function fulfil(shopId: string, orderId: string) {
   }
 }
 
+/**
+ * PayU payments whose customer never came back (closed the tab, lost signal):
+ * ask PayU directly. Unpaid after 3 days, the order is left for manual review.
+ */
+async function reconcilePayu(shopId: string) {
+  const creds = await getCredentials(shopId, "payu");
+  if (!creds) return 0;
+  const waiting = await withShop(shopId, (tx) =>
+    tx
+      .select()
+      .from(orders)
+      .where(
+        and(
+          eq(orders.shopId, shopId),
+          eq(orders.status, "pending_payment"),
+          isNotNull(orders.paymentTxnId),
+          lt(orders.createdAt, sql`now() - interval '2 minutes'`),
+          gte(orders.createdAt, sql`now() - interval '3 days'`),
+        ),
+      ),
+  );
+  let paid = 0;
+  for (const o of waiting) {
+    const t = await payu.verifyPayment(creds, o.paymentTxnId!).catch(() => null);
+    if (t?.status === "success" && Number(t.amt).toFixed(2) === payu.amount(o.totalMinor)) {
+      if (await markPaid(shopId, o.paymentTxnId!, t.mihpayid, "reconcile")) paid++;
+    }
+  }
+  return paid;
+}
+
 /** Pulls status, courier and AWB from Qikink for this shop's open orders. */
 export async function syncShop(shopId: string) {
+  await reconcilePayu(shopId).catch((e) => console.error("payu reconcile", e));
   const creds = await getCredentials(shopId, "qikink");
   if (!creds) return { checked: 0, updated: 0, error: "Qikink not connected" };
   const open = await withShop(shopId, (tx) =>
@@ -367,18 +428,19 @@ export async function syncShop(shopId: string) {
 // ─── refunds and cancellation ───────────────────────────────────────────────
 
 export async function refundOrder(actorId: string, shopId: string, orderId: string, reason: string) {
-  const rzp = await getCredentials(shopId, "razorpay");
   const [order] = await withShop(shopId, (tx) => tx.select().from(orders).where(eq(orders.id, orderId)));
-  if (!order?.razorpayPaymentId || ["pending_payment", "cancelled", "refunded"].includes(order.status)) {
+  if (!order?.paymentGatewayId || ["pending_payment", "cancelled", "refunded"].includes(order.status)) {
     throw new CheckoutError("Only paid orders can be refunded.");
   }
-  if (!rzp) throw new CheckoutError("Razorpay is not connected.");
-  const r = await razorpay.refundPayment(rzp, order.razorpayPaymentId, order.totalMinor);
+  const creds = await getCredentials(shopId, "payu");
+  if (!creds) throw new CheckoutError("PayU is not connected.");
+  const token = `rf${order.number.replace(/[^A-Za-z0-9]/g, "")}${randomBytes(3).toString("hex")}`;
+  const r = { ...(await payu.refund(creds, order.paymentGatewayId, order.totalMinor, token)), amount: order.totalMinor };
   await withShop(shopId, async (tx) => {
     await tx.insert(refunds).values({
       shopId,
       orderId,
-      razorpayRefundId: r.id,
+      gatewayRefundId: r.id,
       amountMinor: r.amount,
       status: r.status,
       reason: reason || null,

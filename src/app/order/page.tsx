@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { adminFetch, checkoutEnabled } from "@/lib/admin-api";
+import ClearCart from "./clear-cart";
 
 export const metadata: Metadata = { title: "Track your order", robots: { index: false } };
 
@@ -56,7 +57,23 @@ export default async function OrderPage({ searchParams }: PageProps<"/order">) {
 
       {order ? (
         <>
-          {q.placed && <p className="mt-6 border border-chalk/40 p-5 text-[15px] text-chalk">Thank you! Your order is placed and paid. Keep your order number: you can track it on this page any time.</p>}
+          {q.placed && order.status !== "pending_payment" && (
+            <>
+              <ClearCart />
+              <p className="mt-6 border border-chalk/40 p-5 text-[15px] text-chalk">
+                Thank you! Your order is placed and paid. Keep your order number: you can track it on this page any time.
+              </p>
+            </>
+          )}
+          {q.failed && order.status === "pending_payment" && (
+            <p role="alert" className="mt-6 border border-rose/50 p-5 text-[15px] text-chalk">
+              The payment didn&apos;t go through, so you haven&apos;t been charged for this order. Your cart is still saved:{" "}
+              <a href="/checkout" className="underline underline-offset-4">
+                try again
+              </a>
+              .
+            </p>
+          )}
           <p className="mt-6 text-[17px] text-chalk">{say[order.status] ?? order.status}</p>
           {reached >= 0 && (
             <ol className="mt-8 grid grid-cols-4 gap-2">

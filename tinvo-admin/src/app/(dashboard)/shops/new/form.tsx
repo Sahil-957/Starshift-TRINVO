@@ -20,7 +20,7 @@ export default function NewShopForm({ orgId }: { orgId: string }) {
       <label className="grid gap-2">
         <span className="label text-dim">Settlement currency</span>
         <input name="settlementCurrency" required defaultValue="INR" maxLength={3} className="field uppercase" />
-        <span className="text-[13px] text-dim">What your payment gateway pays out in. Razorpay settles in INR.</span>
+        <span className="text-[13px] text-dim">What your payment gateway pays out in. PayU settles in INR.</span>
       </label>
       {error && (
         <p role="alert" className="text-[14px] text-rose">

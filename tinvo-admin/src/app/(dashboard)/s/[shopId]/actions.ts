@@ -35,7 +35,7 @@ async function attempt(fn: () => Promise<string | void>): Promise<FormState> {
     if (e instanceof CheckoutError) return { error: e.message };
     const cause = (e as { cause?: { code?: string } }).cause;
     if (cause?.code === "23505") return { error: "That is already in use." };
-    if (e instanceof Error && /^(Razorpay|Qikink)/.test(e.message)) return { error: e.message };
+    if (e instanceof Error && /^(PayU|Qikink)/.test(e.message)) return { error: e.message };
     throw e;
   }
 }
@@ -190,17 +190,17 @@ export async function checkoutSettingsAction(shopId: string, _: FormState, form:
 }
 
 /** Blank secret fields keep what is stored, so secrets are never shown back. */
-export async function razorpayAction(shopId: string, _: FormState, form: FormData): Promise<FormState> {
+export async function payuAction(shopId: string, _: FormState, form: FormData): Promise<FormState> {
   await requireAdmin(shopId);
-  const current = await getCredentials(shopId, "razorpay");
-  const keyId = f(form, "keyId").trim();
-  const keySecret = f(form, "keySecret").trim() || current?.keySecret || "";
-  const webhookSecret = f(form, "webhookSecret").trim() || current?.webhookSecret || "";
-  if (!/^rzp_(test|live)_\w+$/.test(keyId)) return { error: "Key ID starts with rzp_test_ or rzp_live_." };
-  if (!keySecret) return { error: "Enter the key secret." };
-  await setCredentials(shopId, "razorpay", { keyId, keySecret, webhookSecret });
+  const current = await getCredentials(shopId, "payu");
+  const key = f(form, "key").trim();
+  const salt = f(form, "salt").trim() || current?.salt || "";
+  const env = f(form, "env") === "live" ? "live" : "test";
+  if (!/^[A-Za-z0-9]{4,20}$/.test(key)) return { error: "Enter the Merchant Key from PayU → Developer → API Details." };
+  if (!/^[A-Za-z0-9]{16,64}$/.test(salt)) return { error: "Enter the “Salt - 32 bit” value." };
+  await setCredentials(shopId, "payu", { key, salt, env });
   revalidatePath(`/s/${shopId}`, "layout");
-  return { ok: `Saved (${keyId.startsWith("rzp_live_") ? "LIVE" : "test mode"}).` };
+  return { ok: `PayU saved (${env === "live" ? "LIVE: real payments" : "test mode"}).` };
 }
 
 export async function qikinkAction(shopId: string, _: FormState, form: FormData): Promise<FormState> {

@@ -201,8 +201,10 @@ export const orders = pgTable(
     totalMinor: integer("total_minor").notNull(),
     /** intra = CGST+SGST, inter = IGST; null when the shop has no GSTIN */
     taxTreatment: text("tax_treatment"),
-    razorpayOrderId: text("razorpay_order_id"),
-    razorpayPaymentId: text("razorpay_payment_id"),
+    /** payment gateway: PayU. Our txnid sent to PayU, and PayU's mihpayid once paid */
+    paymentProvider: text("payment_provider").notNull().default("payu"),
+    paymentTxnId: text("payment_txn_id"),
+    paymentGatewayId: text("payment_gateway_id"),
     paidAt: timestamp("paid_at", { withTimezone: true }),
     // fulfilment (Qikink)
     supplierReference: text("supplier_reference"),
@@ -219,8 +221,8 @@ export const orders = pgTable(
   },
   (t) => [
     uniqueIndex("orders_shop_number_key").on(t.shopId, t.number),
-    uniqueIndex("orders_razorpay_order_key").on(t.razorpayOrderId),
-    uniqueIndex("orders_razorpay_payment_key").on(t.razorpayPaymentId),
+    uniqueIndex("orders_payment_txn_key").on(t.paymentTxnId),
+    uniqueIndex("orders_payment_gateway_key").on(t.paymentGatewayId),
   ],
 );
 
@@ -263,7 +265,8 @@ export const refunds = pgTable("refunds", {
   id: id(),
   shopId: uuid("shop_id").notNull().references(() => shops.id, { onDelete: "restrict" }),
   orderId: uuid("order_id").notNull().references(() => orders.id, { onDelete: "restrict" }),
-  razorpayRefundId: text("razorpay_refund_id"),
+  /** the gateway's refund request id */
+  gatewayRefundId: text("gateway_refund_id"),
   amountMinor: integer("amount_minor").notNull(),
   status: text("status").notNull(),
   reason: text("reason"),
@@ -287,7 +290,7 @@ export const webhookEvents = pgTable(
 
 // ─── Integrations ───────────────────────────────────────────────────────────
 
-/** Per-shop secrets (Razorpay, Qikink), AES-256-GCM encrypted; see src/lib/crypto.ts. */
+/** Per-shop secrets (PayU, Qikink), AES-256-GCM encrypted; see src/lib/crypto.ts. */
 export const shopCredentials = pgTable(
   "shop_credentials",
   {

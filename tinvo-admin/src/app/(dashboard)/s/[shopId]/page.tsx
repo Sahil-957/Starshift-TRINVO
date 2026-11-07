@@ -27,7 +27,7 @@ export default async function ShopOverview({ params }: PageProps<"/s/[shopId]">)
   const checklist = [
     ["Add products", productList.some((p) => p.status === "active"), `/s/${shopId}/products`],
     ["Connect Qikink", has("qikink"), `/s/${shopId}/settings#integrations`],
-    ["Connect Razorpay", has("razorpay"), `/s/${shopId}/settings#integrations`],
+    ["Connect PayU", has("payu"), `/s/${shopId}/settings#integrations`],
     ["Create a storefront token", keys.length > 0, `/s/${shopId}/settings#storefront`],
     ["Add GSTIN and origin state", Boolean(shop.gstin && shop.originState), `/s/${shopId}/settings`],
   ] as const;

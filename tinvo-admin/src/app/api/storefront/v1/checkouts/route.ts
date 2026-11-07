@@ -1,5 +1,8 @@
 import { createCheckout } from "@/core/orders";
 import { storefront } from "../handler";
 
-/** Cart + customer + address -> priced order and a Razorpay order to pay. */
-export const POST = storefront(async (shopId, req) => createCheckout(shopId, await req.json()));
+/** Cart + customer + address + return URL -> priced order and a signed PayU payment form. */
+export const POST = storefront(async (shopId, req) => {
+  const body = await req.json();
+  return createCheckout(shopId, body, body.returnUrl);
+});

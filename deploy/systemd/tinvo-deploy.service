@@ -1,0 +1,7 @@
+[Unit]
+Description=TINVO deploy: build the latest code in a fresh release and switch to it
+
+[Service]
+Type=oneshot
+ExecStart=/srv/tinvo/deploy.sh
+TimeoutStartSec=30min

@@ -1,0 +1,12 @@
+# Caddy gets and renews HTTPS certificates for both names automatically.
+# DNS: both names need an A record pointing at this server's IP.
+
+tinvo.starshift.in {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:3000
+}
+
+admin.starshift.in {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:3001
+}

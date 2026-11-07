@@ -29,6 +29,27 @@
       "when": 1793816411111,
       "tag": "0003_commerce_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794063089054,
+      "tag": "0004_payu",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794063252583,
+      "tag": "0005_drop_razorpay",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794063271158,
+      "tag": "0006_refund_gateway_id",
+      "breakpoints": true
     }
   ]
 }

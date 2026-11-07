@@ -1,0 +1,1 @@
+ALTER TABLE "refunds" ADD COLUMN "gateway_refund_id" text;

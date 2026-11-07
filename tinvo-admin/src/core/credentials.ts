@@ -3,10 +3,10 @@ import { and, eq, sql } from "drizzle-orm";
 import { withShop } from "../db/index.ts";
 import { shopCredentials } from "../db/schema.ts";
 import { decryptJson, encryptJson } from "../lib/crypto.ts";
+import type { PayuCreds } from "../lib/payu.ts";
 import type { QikinkCreds } from "../lib/qikink.ts";
-import type { RazorpayCreds } from "../lib/razorpay.ts";
 
-type Providers = { razorpay: RazorpayCreds; qikink: QikinkCreds };
+type Providers = { payu: PayuCreds; qikink: QikinkCreds };
 export type Provider = keyof Providers;
 
 export async function getCredentials<P extends Provider>(shopId: string, provider: P): Promise<Providers[P] | null> {

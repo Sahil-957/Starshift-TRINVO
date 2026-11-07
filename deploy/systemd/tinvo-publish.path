@@ -1,0 +1,9 @@
+[Unit]
+Description=Rebuild TINVO when the admin publishes (watches the trigger file)
+
+[Path]
+PathModified=/var/lib/tinvo/publish.request
+Unit=tinvo-deploy.service
+
+[Install]
+WantedBy=multi-user.target

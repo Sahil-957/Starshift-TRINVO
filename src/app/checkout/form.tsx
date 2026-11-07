@@ -1,27 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useCartLines } from "../cart/view";
 import { STATES } from "@/data/india";
 import { formatPrice } from "@/data/products";
-import { cart } from "@/lib/cart";
 
-type RazorpayResponse = { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string };
-type RazorpayCtor = new (options: Record<string, unknown>) => { open(): void; on(e: string, f: () => void): void };
-
-/** Loads Razorpay's checkout script once. */
-function loadRazorpay(): Promise<RazorpayCtor> {
-  const w = window as unknown as { Razorpay?: RazorpayCtor };
-  if (w.Razorpay) return Promise.resolve(w.Razorpay);
-  return new Promise((resolve, reject) => {
-    const s = document.createElement("script");
-    s.src = "https://checkout.razorpay.com/v1/checkout.js";
-    s.onload = () => (w.Razorpay ? resolve(w.Razorpay) : reject(new Error("Razorpay did not load")));
-    s.onerror = () => reject(new Error("Couldn't reach Razorpay. Check your connection."));
-    document.body.appendChild(s);
-  });
+/** Sends the browser to PayU's payment page with the admin-signed fields. */
+function goToPayu(action: string, fields: Record<string, string>) {
+  const form = document.createElement("form");
+  form.method = "POST";
+  form.action = action;
+  for (const [name, value] of Object.entries(fields)) {
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = name;
+    input.value = value;
+    form.appendChild(input);
+  }
+  document.body.appendChild(form);
+  form.submit();
 }
 
 const input = "w-full border hairline bg-transparent px-4 py-3 text-[15px] text-chalk outline-none focus:border-chalk";
@@ -35,10 +33,9 @@ function F({ label, children, wide }: { label: string; children: React.ReactNode
   );
 }
 
-export default function CheckoutForm() {
-  const router = useRouter();
+export default function CheckoutForm({ returnError }: { returnError?: string }) {
   const lines = useCartLines();
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(returnError ?? null);
   const [busy, setBusy] = useState(false);
   const subtotal = lines.reduce((s, l) => s + l.product.price * l.quantity, 0);
 
@@ -72,37 +69,8 @@ export default function CheckoutForm() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Checkout failed. Please try again.");
-
-      const Razorpay = await loadRazorpay();
-      const rzp = new Razorpay({
-        key: data.razorpay.keyId,
-        order_id: data.razorpay.orderId,
-        amount: data.razorpay.amount,
-        currency: data.razorpay.currency,
-        name: "TINVO",
-        description: `Order ${data.orderNumber}`,
-        prefill: { name: customer.name, email: customer.email, contact: customer.phone },
-        theme: { color: "#08080a" },
-        handler: async (r: RazorpayResponse) => {
-          const ok = await fetch("/api/checkout/confirm", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              razorpayOrderId: r.razorpay_order_id,
-              razorpayPaymentId: r.razorpay_payment_id,
-              razorpaySignature: r.razorpay_signature,
-            }),
-          });
-          cart.clear();
-          // even if this check fails, the payment webhook still marks the order paid
-          router.push(
-            `/order?number=${encodeURIComponent(data.orderNumber)}&email=${encodeURIComponent(customer.email)}${ok.ok ? "&placed=1" : ""}`,
-          );
-        },
-        modal: { ondismiss: () => setBusy(false) },
-      });
-      rzp.on("payment.failed", () => setError("The payment didn't go through. You can try again."));
-      rzp.open();
+      // the cart is kept until PayU confirms; the order page clears it
+      goToPayu(data.payu.action, data.payu.fields);
     } catch (err) {
       setError((err as Error).message);
       setBusy(false);
@@ -152,10 +120,10 @@ export default function CheckoutForm() {
         )}
         <div className="sm:col-span-2">
           <button type="submit" disabled={busy} className="label w-full bg-chalk px-10 py-4 text-void hover:bg-bronze disabled:opacity-60 sm:w-auto">
-            {busy ? "Opening payment…" : "Continue to payment"}
+            {busy ? "Taking you to PayU…" : "Continue to payment"}
           </button>
           <p className="mt-3 text-[13px] text-dim">
-            Secure payment by Razorpay: UPI, cards and netbanking. Each tumbler is printed after you order.
+            Secure payment by PayU: UPI, cards and netbanking. Each tumbler is printed after you order.
           </p>
         </div>
       </form>
@@ -175,7 +143,7 @@ export default function CheckoutForm() {
         <p className="mt-5 flex justify-between border-t hairline pt-4 text-[15px] text-chalk">
           Subtotal <span className="font-mono tabular-nums">{formatPrice(subtotal)}</span>
         </p>
-        <p className="mt-2 text-[13px] text-dim">Shipping, if any, is added in the payment window. Prices include GST.</p>
+        <p className="mt-2 text-[13px] text-dim">Shipping, if any, is added on the payment page. Prices include GST.</p>
       </aside>
     </div>
   );

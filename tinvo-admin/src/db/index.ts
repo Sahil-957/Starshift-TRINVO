@@ -6,13 +6,27 @@ import * as schema from "./schema.ts";
 
 /**
  * The app connects as `tinvo_app`, a role row-level security applies to.
- * Migrations use the owner role (DATABASE_URL_UNPOOLED), which bypasses RLS,
- * so app code must never read DATABASE_URL.
+ * Migrations use the owner role (DATABASE_URL_UNPOOLED), which bypasses RLS.
+ *
+ * Locally the app URL is derived from DATABASE_URL (which `neon checkout` keeps
+ * on the current branch) with tinvo_app's credentials swapped in, so switching
+ * branch always switches the app too. A deployment may set APP_DATABASE_URL.
  */
+function appUrl() {
+  if (process.env.APP_DATABASE_URL) return process.env.APP_DATABASE_URL;
+  const base = process.env.DATABASE_URL;
+  const password = process.env.TINVO_APP_PASSWORD;
+  if (!base || !password) return undefined;
+  const u = new URL(base);
+  u.username = "tinvo_app";
+  u.password = password;
+  return u.toString();
+}
+
 export const pool = new pg.Pool({
   // Neon's string says sslmode=require, which pg treats as verify-full today but
   // will weaken in pg 9; pin full verification so it can't silently change
-  connectionString: process.env.APP_DATABASE_URL?.replace("sslmode=require", "sslmode=verify-full"),
+  connectionString: appUrl()?.replace("sslmode=require", "sslmode=verify-full"),
 });
 
 // lets Vercel Fluid compute close idle connections before the instance sleeps

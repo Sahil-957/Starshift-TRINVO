@@ -112,8 +112,8 @@ export default async function OrderPage({ params }: PageProps<"/s/[shopId]/order
 
         <section className="border hairline p-5">
           <h3 className="label text-ash">Payment</h3>
-          <p className="mt-3 break-all text-ash">Razorpay order {o.razorpayOrderId ?? "—"}</p>
-          <p className="break-all text-ash">Payment {o.razorpayPaymentId ?? "not paid yet"}</p>
+          <p className="mt-3 break-all text-ash">PayU txn {o.paymentTxnId ?? "—"}</p>
+          <p className="break-all text-ash">PayU payment {o.paymentGatewayId ?? "not paid yet"}</p>
           {o.paidAt && <p className="text-ash">Paid {o.paidAt.toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</p>}
         </section>
 

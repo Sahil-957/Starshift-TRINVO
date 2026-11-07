@@ -1,0 +1,8 @@
+[Unit]
+Description=TINVO: reconcile PayU payments and pull Qikink order status
+
+[Service]
+Type=oneshot
+User=tinvo
+EnvironmentFile=/srv/tinvo/shared/admin.env
+ExecStart=/bin/sh -c 'curl -fsS --max-time 600 -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3001/api/cron/sync'

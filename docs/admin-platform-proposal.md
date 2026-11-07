@@ -604,7 +604,8 @@ guarantee that is only ever verified by hand will eventually be wrong.
 | Auth | Auth.js v5, credentials + JWT sessions | No adapter tables needed for email/password. |
 | RLS role | `tinvo_app` (no BYPASSRLS); owner role only migrates | Same policy idea as §2.3, keyed on `app.current_shop_id`. |
 | Repo | Admin lives in `tinvo-admin/` inside this repo as an npm workspace | One install, one disk footprint; still a separate Vercel project (root `tinvo-admin`). The storefront holds no backend code or credentials. |
-| Qikink | Has an API (token, create order, order list). Sandbox passes; live requested. | §9 "Blocked" below is resolved. |
+| Qikink | Has an API (token, create order, order list). Sandbox passes; live approved. | §9 "Blocked" below is resolved. |
+| Payment gateway | **PayU** (hosted checkout), Razorpay removed — 7 Nov 2026 | Existing PayU merchant account. Orders carry `payment_txn_id` / `payment_gateway_id`; refunds `gateway_refund_id`. PayU also settles in INR, so §3.6 is unchanged. |
 
 ### Settled — 24 October 2026
 
