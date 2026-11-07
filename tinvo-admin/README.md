@@ -50,7 +50,10 @@ The app follows the branch automatically: its URL is built from the pulled
    `STOREFRONT_TOKEN`, with `ADMIN_API_URL` = this admin's URL.
 4. **Deploy hook**: paste the storefront's Vercel deploy hook so *Publish to
    storefront* rebuilds it after product edits.
-5. Order tracking syncs from Qikink every 30 minutes (`vercel.json` cron, needs `CRON_SECRET`).
+5. Order tracking syncs from Qikink every 30 minutes (server timer, needs `CRON_SECRET`).
+6. **Email** (optional): `SMTP_USER`/`SMTP_PASS` (a Gmail App Password) and `ALERT_EMAIL`.
+   You get: each paid order, any order Qikink refuses, a sync that starts failing.
+   Customers get: "order confirmed" after paying, "shipped" with tracking.
 
 ## How an order flows
 

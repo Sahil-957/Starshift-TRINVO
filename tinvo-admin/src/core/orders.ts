@@ -28,7 +28,8 @@ import * as payu from "../lib/payu.ts";
 import { signedUrl } from "../lib/storage.ts";
 import { getCredentials } from "./credentials.ts";
 import { priceOrder } from "./pricing.ts";
-import { getCheckoutSettings, setShopState } from "./settings.ts";
+import { notifyFulfilmentFailed, notifyPaid, notifyShipped, notifySyncFailing } from "./notify.ts";
+import { getCheckoutSettings, getShopState, setShopState } from "./settings.ts";
 
 export class CheckoutError extends Error {}
 
@@ -178,7 +179,10 @@ async function markPaid(shopId: string, txnid: string, paymentId: string, source
     if (o) await event(tx, shopId, o.id, "paid", { paymentId, source });
     return o?.id ?? null;
   });
-  if (id) await fulfil(shopId, id).catch(() => {}); // failures are recorded on the order
+  if (id) {
+    await fulfil(shopId, id).catch(() => {}); // failures are recorded on the order
+    await notifyPaid(shopId, id);
+  }
   return id;
 }
 
@@ -236,11 +240,13 @@ export async function fulfil(shopId: string, orderId: string) {
   const [order] = await withShop(shopId, (tx) => tx.select().from(orders).where(eq(orders.id, orderId)));
   if (!order || order.status !== "paid" || order.supplierOrderId) return;
 
-  const fail = (message: string) =>
-    withShop(shopId, async (tx) => {
+  const fail = async (message: string) => {
+    await withShop(shopId, async (tx) => {
       await tx.update(orders).set({ fulfilmentError: message, updatedAt: sql`now()` }).where(eq(orders.id, orderId));
       await event(tx, shopId, orderId, "fulfilment.failed", { message });
     });
+    await notifyFulfilmentFailed(shopId, orderId, message);
+  };
   if (!creds) return fail("Qikink is not connected for this shop (Settings → Integrations).");
 
   const lines = await withShop(shopId, (tx) =>
@@ -374,8 +380,11 @@ async function reconcilePayu(shopId: string) {
 
 /** Reconciles PayU, pulls Qikink status/tracking, and records the result for the overview. */
 export async function syncShop(shopId: string) {
+  const before = (await getShopState(shopId).catch(() => null))?.lastSync;
   const r = await runSync(shopId);
   await setShopState(shopId, "lastSync", { at: new Date().toISOString(), ...r }).catch(() => {});
+  // alert once when it starts failing, not every 30 minutes
+  if (r.error && !before?.error) await notifySyncFailing(shopId, r.error);
   return r;
 }
 
@@ -423,6 +432,8 @@ async function runSync(shopId: string) {
             await event(tx, shopId, o.id, "fulfilment.status", { supplier: q.status, status: next, awb: q.shipping.awb });
           }
         });
+        // first time we see it shipped: send the customer the tracking link
+        if (next === "shipped" && o.status !== "shipped") await notifyShipped(shopId, o.id);
         updated++;
       }
     }

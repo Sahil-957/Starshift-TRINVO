@@ -10,6 +10,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { after, before, describe, it, mock } from "node:test";
 import { eq, sql } from "drizzle-orm";
+import nodemailer from "nodemailer";
 import pg from "pg";
 import { pool, withShop } from "../db/index.ts";
 import { orderEvents, orders } from "../db/schema.ts";
@@ -51,6 +52,14 @@ let shopId = "";
 let bareShopId = "";
 
 // PayU's server-to-server replies are simulated; Qikink and Neon go out for real
+// emails are captured, not sent
+process.env.SMTP_USER = "shop@test.invalid";
+process.env.SMTP_PASS = "test";
+process.env.ALERT_EMAIL = "owner@test.invalid";
+process.env.ADMIN_URL = "https://admin.example";
+const mails: { to: string; subject: string; text: string }[] = [];
+mock.method(nodemailer, "createTransport", () => ({ sendMail: async (m: (typeof mails)[number]) => void mails.push(m) }));
+
 const realFetch = globalThis.fetch;
 const payuCalls: Record<string, string>[] = [];
 const verified = new Map<string, { status: string; amt: string; mihpayid: string }>();
@@ -194,6 +203,15 @@ describe("checkout to delivery (PayU)", () => {
     const o = await orderNo("TST-1001");
     const events = await withShop(shopId, (tx) => tx.select().from(orderEvents).where(eq(orderEvents.orderId, o.id)));
     assert.equal(events.filter((e) => e.type === "paid").length, 1, "paid exactly once");
+  });
+
+  it("emails the owner and the customer once per paid order", async () => {
+    const about = mails.filter((m) => m.subject.includes("TST-1001"));
+    assert.equal(about.filter((m) => m.to === "owner@test.invalid").length, 1, "one owner alert despite the webhook");
+    const confirm = about.find((m) => m.to === customer.email);
+    assert.match(confirm?.subject ?? "", /confirmed/);
+    assert.match(confirm?.text ?? "", /Total paid/);
+    assert.ok((about.find((m) => m.to === "owner@test.invalid")?.text ?? "").includes("https://admin.example/s/"));
   });
 
   it("lets the customer look up the order with number and email only", async () => {
