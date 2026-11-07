@@ -116,3 +116,42 @@ export const storefrontProducts = (shopId: string) =>
       .where(and(eq(products.shopId, shopId), eq(products.status, "active")))
       .orderBy(asc(products.name)),
   );
+
+/** Quick edit from the products table: only rows whose price or status changed are written. */
+export const quickEditInput = z.array(
+  z.object({
+    id: z.uuid(),
+    price: money,
+    status: z.enum(["draft", "active", "archived"]),
+  }),
+);
+
+export async function quickEdit(shopId: string, input: z.input<typeof quickEditInput>) {
+  const rows = quickEditInput.parse(input);
+  return withShop(shopId, async (tx) => {
+    let changed = 0;
+    for (const r of rows) {
+      const done = await tx
+        .update(products)
+        .set({ priceMinor: r.price, status: r.status, updatedAt: sql`now()` })
+        .where(
+          and(
+            eq(products.shopId, shopId),
+            eq(products.id, r.id),
+            sql`(${products.priceMinor} <> ${r.price} or ${products.status} <> ${r.status})`,
+          ),
+        )
+        .returning({ id: products.id });
+      changed += done.length;
+    }
+    return changed;
+  });
+}
+
+/** When any product last changed; newer than the last publish means the site is behind. */
+export const lastProductEdit = async (shopId: string) =>
+  (
+    await withShop(shopId, (tx) =>
+      tx.select({ at: sql<string | null>`max(${products.updatedAt})` }).from(products).where(eq(products.shopId, shopId)),
+    )
+  )[0]?.at ?? null;

@@ -44,3 +44,6 @@ next-env.d.ts
 # local editor settings
 .vscode/
 .neon
+
+# Qikink exports (business data, not code)
+qikink_products*.csv

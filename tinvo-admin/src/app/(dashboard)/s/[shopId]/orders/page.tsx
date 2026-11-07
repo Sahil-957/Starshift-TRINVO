@@ -13,28 +13,59 @@ const filters = ["", "pending_payment", "paid", "in_production", "shipped", "del
 
 export default async function OrdersPage({ params, searchParams }: PageProps<"/s/[shopId]/orders">) {
   const { shopId } = await params;
-  const status = String((await searchParams).status ?? "");
-  const [shop, list] = await Promise.all([getShop(shopId), listOrdersForShop(shopId, filters.includes(status) ? status || undefined : undefined)]);
+  const sp = await searchParams;
+  const status = String(sp.status ?? "");
+  const q = String(sp.q ?? "").slice(0, 80);
+  const [shop, list] = await Promise.all([
+    getShop(shopId),
+    listOrdersForShop(shopId, filters.includes(status) ? status || undefined : undefined, q || undefined),
+  ]);
+  const withQ = (s: string) => `?${new URLSearchParams({ ...(s && { status: s }), ...(q && { q }) })}`;
 
   return (
     <>
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <nav className="flex flex-wrap gap-2">
-          {filters.map((s) => (
-            <Link
-              key={s}
-              href={s ? `?status=${s}` : "?"}
-              className={`label border px-3 py-2 ${s === status ? "border-chalk text-chalk" : "hairline text-dim hover:text-ash"}`}
-            >
-              {s ? statusLabel(s) : "All"}
-            </Link>
-          ))}
-        </nav>
-        <ActionForm action={syncAction.bind(null, shopId)} submit="Sync with Qikink" tone="quiet" className="flex items-center gap-3" />
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <form method="get" className="flex min-w-0 flex-1 gap-2 sm:max-w-md">
+          {status && <input type="hidden" name="status" value={status} />}
+          <input
+            name="q"
+            defaultValue={q}
+            placeholder="Search order no., name, email or phone"
+            aria-label="Search orders"
+            className="field min-w-0 py-2"
+          />
+          <button type="submit" className="label border hairline px-4 text-ash hover:text-chalk">
+            Search
+          </button>
+        </form>
+        <div className="flex flex-wrap items-center gap-3">
+          <a href={`/s/${shopId}/orders/export?days=30`} className="label border hairline px-5 py-3 text-ash hover:text-chalk">
+            Export 30 days
+          </a>
+          <a href={`/s/${shopId}/orders/export?days=365`} className="label border hairline px-5 py-3 text-ash hover:text-chalk">
+            Export 1 year
+          </a>
+          <ActionForm action={syncAction.bind(null, shopId)} submit="Sync with Qikink" tone="quiet" className="flex items-center gap-3" />
+        </div>
       </div>
 
+      <nav className="mt-5 flex flex-wrap gap-2">
+        {filters.map((s) => (
+          <Link
+            key={s}
+            href={withQ(s)}
+            className={`label border px-3 py-2 ${s === status ? "border-chalk text-chalk" : "hairline text-dim hover:text-ash"}`}
+          >
+            {s ? statusLabel(s) : "All"}
+          </Link>
+        ))}
+      </nav>
+
       {list.length === 0 ? (
-        <p className="mt-8 border hairline p-8 text-center text-[14px] text-dim">No orders{status ? ` with status “${statusLabel(status)}”` : " yet"}.</p>
+        <p className="mt-8 border hairline p-8 text-center text-[14px] text-dim">
+          No orders{status ? ` with status “${statusLabel(status)}”` : ""}
+          {q ? ` matching “${q}”` : status ? "" : " yet"}.
+        </p>
       ) : (
         <div className="mt-6 overflow-x-auto">
           <table className="w-full min-w-[720px] text-left text-[14px]">

@@ -8,7 +8,7 @@
  * the webhook and the reconciliation job can all arrive safely.
  */
 import { randomBytes } from "node:crypto";
-import { and, desc, eq, gte, inArray, isNotNull, lt, sql } from "drizzle-orm";
+import { and, desc, eq, gte, ilike, inArray, isNotNull, lt, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db, withShop, type Tx } from "../db/index.ts";
 import {
@@ -28,7 +28,7 @@ import * as payu from "../lib/payu.ts";
 import { signedUrl } from "../lib/storage.ts";
 import { getCredentials } from "./credentials.ts";
 import { priceOrder } from "./pricing.ts";
-import { getCheckoutSettings } from "./settings.ts";
+import { getCheckoutSettings, setShopState } from "./settings.ts";
 
 export class CheckoutError extends Error {}
 
@@ -372,8 +372,15 @@ async function reconcilePayu(shopId: string) {
   return paid;
 }
 
-/** Pulls status, courier and AWB from Qikink for this shop's open orders. */
+/** Reconciles PayU, pulls Qikink status/tracking, and records the result for the overview. */
 export async function syncShop(shopId: string) {
+  const r = await runSync(shopId);
+  await setShopState(shopId, "lastSync", { at: new Date().toISOString(), ...r }).catch(() => {});
+  return r;
+}
+
+/** Pulls status, courier and AWB from Qikink for this shop's open orders. */
+async function runSync(shopId: string) {
   await reconcilePayu(shopId).catch((e) => console.error("payu reconcile", e));
   const creds = await getCredentials(shopId, "qikink");
   if (!creds) return { checked: 0, updated: 0, error: "Qikink not connected" };
@@ -466,8 +473,11 @@ export async function cancelOrder(actorId: string, shopId: string, orderId: stri
 
 // ─── reads ──────────────────────────────────────────────────────────────────
 
-export const listOrdersForShop = (shopId: string, status?: string) =>
-  withShop(shopId, (tx) =>
+export const listOrdersForShop = (shopId: string, status?: string, search?: string) => {
+  // order number, name, email or phone (digits only, so "98765 43210" matches)
+  const q = search?.trim();
+  const digits = q?.replace(/\D/g, "");
+  return withShop(shopId, (tx) =>
     tx
       .select()
       .from(orders)
@@ -475,11 +485,48 @@ export const listOrdersForShop = (shopId: string, status?: string) =>
         and(
           eq(orders.shopId, shopId),
           status ? eq(orders.status, status as (typeof orders.status.enumValues)[number]) : undefined,
+          q
+            ? or(
+                ilike(orders.number, `%${q}%`),
+                ilike(orders.customerName, `%${q}%`),
+                ilike(orders.email, `%${q}%`),
+                digits && digits.length >= 4 ? ilike(orders.phone, `%${digits.slice(-10)}%`) : undefined,
+              )
+            : undefined,
         ),
       )
       .orderBy(desc(orders.createdAt))
       .limit(200),
   );
+};
+
+/** What needs a person: paid orders Qikink hasn't got, and recent unpaid checkouts. */
+export const attentionCounts = (shopId: string) =>
+  withShop(shopId, async (tx) => {
+    const [r] = await tx
+      .select({
+        notSent: sql<number>`count(*) filter (where ${orders.status} = 'paid' and ${orders.fulfilmentError} is not null)::int`,
+        sending: sql<number>`count(*) filter (where ${orders.status} = 'paid' and ${orders.fulfilmentError} is null)::int`,
+        unpaid: sql<number>`count(*) filter (where ${orders.status} = 'pending_payment' and ${orders.createdAt} > now() - interval '7 days')::int`,
+      })
+      .from(orders)
+      .where(eq(orders.shopId, shopId));
+    return r;
+  });
+
+/** Paid orders in the last `days`, with their items, for the spreadsheet export. */
+export const ordersForExport = (shopId: string, days: number) =>
+  withShop(shopId, async (tx) => {
+    const rows = await tx
+      .select()
+      .from(orders)
+      .where(and(eq(orders.shopId, shopId), isNotNull(orders.paidAt), gte(orders.paidAt, sql`now() - make_interval(days => ${days})`)))
+      .orderBy(desc(orders.paidAt));
+    const items = rows.length
+      ? await tx.select().from(orderItems).where(inArray(orderItems.orderId, rows.map((o) => o.id)))
+      : [];
+    return rows.map((o) => ({ ...o, items: items.filter((i) => i.orderId === o.id) }));
+  });
 
 export async function getOrderDetail(shopId: string, orderId: string) {
   if (!z.uuid().safeParse(orderId).success) return null;

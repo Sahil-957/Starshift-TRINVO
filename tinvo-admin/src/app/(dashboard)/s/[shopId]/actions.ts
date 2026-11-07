@@ -10,7 +10,7 @@ import { redirect } from "next/navigation";
 import { ZodError } from "zod";
 import type { FormState } from "../../action-form";
 import { createApiKey, revokeApiKey } from "@/core/apikeys";
-import { createProduct, getProduct, updateProduct } from "@/core/catalogue";
+import { createProduct, getProduct, quickEdit, updateProduct } from "@/core/catalogue";
 import { getCredentials, setCredentials } from "@/core/credentials";
 import { cancelOrder, CheckoutError, fulfil, refundOrder, syncShop } from "@/core/orders";
 import { requireShop } from "@/core/session";
@@ -19,6 +19,7 @@ import {
   checkoutSettingsInput,
   getCheckoutSettings,
   setCheckoutSettings,
+  setShopState,
   updateShopDetails,
 } from "@/core/settings";
 import { addMember, removeMember } from "@/core/team";
@@ -95,7 +96,27 @@ export async function publishStorefrontAction(shopId: string): Promise<FormState
   const { storefrontDeployHook } = await getCheckoutSettings(shopId);
   if (!storefrontDeployHook) return { error: "Add the storefront deploy hook in Settings first." };
   const res = await fetch(storefrontDeployHook, { method: "POST" });
-  return res.ok ? { ok: "Storefront rebuild started. Changes are live in a few minutes." } : { error: `Deploy hook failed (${res.status}).` };
+  if (!res.ok) return { error: `The website didn't accept the publish request (${res.status}).` };
+  await setShopState(shopId, "lastPublishedAt", new Date().toISOString());
+  revalidatePath(`/s/${shopId}`, "layout");
+  return { ok: "Publishing. The website shows your changes in about 3–5 minutes." };
+}
+
+/** Prices and statuses for every product, from the products table, in one save. */
+export async function quickEditAction(shopId: string, _: FormState, form: FormData): Promise<FormState> {
+  await requireShop(shopId, "manage");
+  const ids = form.getAll("id").map(String);
+  const r = await attempt(async () => {
+    const changed = await quickEdit(
+      shopId,
+      ids.map((id) => ({ id, price: f(form, `price:${id}`), status: f(form, `status:${id}`) as "draft" | "active" | "archived" })),
+    );
+    return changed
+      ? `Saved ${changed} change${changed === 1 ? "" : "s"}. Click Publish to put them on the website.`
+      : "Nothing changed.";
+  });
+  revalidatePath(`/s/${shopId}`, "layout");
+  return r;
 }
 
 // ─── orders ─────────────────────────────────────────────────────────────────

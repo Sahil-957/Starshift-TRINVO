@@ -34,4 +34,4 @@ systemctl restart tinvo-admin tinvo-storefront
 
 # keep the last 3 releases for a quick rollback
 ls -1dt "$R"/releases/* | tail -n +4 | xargs -r rm -rf
-echo "✓ deployed $(git -C "$NEW" rev-parse --short HEAD)"
+echo "✓ deployed $(as_tinvo git -C "$NEW" rev-parse --short HEAD)"

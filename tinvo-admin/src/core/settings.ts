@@ -111,3 +111,33 @@ export async function setCheckoutSettings(shopId: string, input: CheckoutSetting
     }
   });
 }
+
+// ─── shop state: what the admin records about itself (shop_settings rows) ───
+
+export type ShopState = {
+  /** when "Publish to storefront" last succeeded */
+  lastPublishedAt: string | null;
+  /** the last Qikink/PayU sync, by the 30-minute job or the button */
+  lastSync: { at: string; checked: number; updated: number; error: string | null } | null;
+};
+const stateKeys = ["lastPublishedAt", "lastSync"] as const;
+
+export async function getShopState(shopId: string): Promise<ShopState> {
+  const rows = await withShop(shopId, (tx) =>
+    tx
+      .select()
+      .from(shopSettings)
+      .where(and(eq(shopSettings.shopId, shopId), inArray(shopSettings.key, [...stateKeys]))),
+  );
+  return { lastPublishedAt: null, lastSync: null, ...Object.fromEntries(rows.map((r) => [r.key, r.value])) };
+}
+
+export async function setShopState<K extends keyof ShopState>(shopId: string, key: K, value: ShopState[K]) {
+  const v = sql`${JSON.stringify(value)}::jsonb`;
+  await withShop(shopId, (tx) =>
+    tx
+      .insert(shopSettings)
+      .values({ shopId, key, value: v })
+      .onConflictDoUpdate({ target: [shopSettings.shopId, shopSettings.key], set: { value: v, updatedAt: sql`now()` } }),
+  );
+}

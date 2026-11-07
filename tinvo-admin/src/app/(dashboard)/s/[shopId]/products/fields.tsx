@@ -69,36 +69,46 @@ export default function ProductFields({ p = {} }: { p?: Defaults }) {
         </Field>
       </fieldset>
 
-      <fieldset className="grid gap-5 border-t hairline pt-6 sm:grid-cols-3">
+      <fieldset className="grid gap-5 border-t hairline pt-6">
         <legend className="label mb-4 text-ash">Fulfilment · Qikink</legend>
-        <Field label="Qikink SKU" hint="e.g. UTumb-Wh-20oz">
-          <input name="supplierSku" defaultValue={p.supplierSku ?? ""} className="field" />
+        <Field
+          label="Qikink Store SKU"
+          hint={<>Qikink → Products → My Products → ⋯ → Variations → <b>Store SKU</b> (starts with v-). Orders for this product go to Qikink with it.</>}
+        >
+          <input name="supplierSku" defaultValue={p.supplierSku ?? ""} placeholder="v-…" className="field font-mono text-[13px]" />
         </Field>
-        <Field label="Print type ID" hint="Sandbox accepts 5 for tumblers">
-          <input name="printTypeId" defaultValue={p.printTypeId ?? ""} className="field" />
-        </Field>
-        <Field label="Design code" hint="Max 20 characters">
-          <input name="designCode" maxLength={20} defaultValue={p.designCode ?? ""} className="field" />
-        </Field>
-        <div className="sm:col-span-3">
-          <Field
-            label="Print file (private storage key)"
-            hint="Leave empty to use the product as set up in Qikink “My Products”."
-          >
-            <input name="printFileKey" defaultValue={p.printFileKey ?? ""} className="field font-mono text-[13px]" />
-          </Field>
-        </div>
-        <Field label="Print width (in)">
-          <input name="printWidthIn" defaultValue={p.printWidthIn ?? ""} className="field" />
-        </Field>
-        <Field label="Print height (in)">
-          <input name="printHeightIn" defaultValue={p.printHeightIn ?? ""} className="field" />
-        </Field>
-        <div className="sm:col-span-3">
-          <Field label="Mockup image URL" hint="A public image of the finished product">
-            <input name="mockupUrl" type="url" defaultValue={p.mockupUrl ?? ""} className="field" />
-          </Field>
-        </div>
+
+        <details className="border hairline p-5" open={Boolean(p.printFileKey)}>
+          <summary className="label cursor-pointer text-dim">Advanced: send a print file instead of My Products</summary>
+          <p className="mt-3 text-[13px] text-dim">
+            Only for a design that is not in Qikink My Products. Leave all of these empty otherwise.
+          </p>
+          <div className="mt-5 grid gap-5 sm:grid-cols-3">
+            <Field label="Print type ID">
+              <input name="printTypeId" defaultValue={p.printTypeId ?? ""} className="field" />
+            </Field>
+            <Field label="Design code" hint="Max 20 characters">
+              <input name="designCode" maxLength={20} defaultValue={p.designCode ?? ""} className="field" />
+            </Field>
+            <div />
+            <div className="sm:col-span-3">
+              <Field label="Print file (private storage key)">
+                <input name="printFileKey" defaultValue={p.printFileKey ?? ""} className="field font-mono text-[13px]" />
+              </Field>
+            </div>
+            <Field label="Print width (in)">
+              <input name="printWidthIn" defaultValue={p.printWidthIn ?? ""} className="field" />
+            </Field>
+            <Field label="Print height (in)">
+              <input name="printHeightIn" defaultValue={p.printHeightIn ?? ""} className="field" />
+            </Field>
+            <div className="sm:col-span-3">
+              <Field label="Mockup image URL" hint="A public image of the finished product">
+                <input name="mockupUrl" type="url" defaultValue={p.mockupUrl ?? ""} className="field" />
+              </Field>
+            </div>
+          </div>
+        </details>
       </fieldset>
     </>
   );

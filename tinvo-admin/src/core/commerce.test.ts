@@ -16,22 +16,25 @@ import { orderEvents, orders } from "../db/schema.ts";
 import { envCreds } from "../lib/qikink.ts";
 import { putFile } from "../lib/storage.ts";
 import { createApiKey, listApiKeys, revokeApiKey, shopForToken } from "./apikeys.ts";
-import { createProduct, storefrontProducts } from "./catalogue.ts";
+import { createProduct, lastProductEdit, listProducts, quickEdit, storefrontProducts } from "./catalogue.ts";
 import { setCredentials } from "./credentials.ts";
 import {
+  attentionCounts,
   cancelOrder,
   CheckoutError,
   createCheckout,
   fulfil,
   getOrderDetail,
   handlePayuWebhook,
+  listOrdersForShop,
   lookupOrder,
+  ordersForExport,
   payuReturn,
   refundOrder,
   syncShop,
 } from "./orders.ts";
 import { shopReport } from "./reports.ts";
-import { setCheckoutSettings, updateShopDetails } from "./settings.ts";
+import { getShopState, setCheckoutSettings, updateShopDetails } from "./settings.ts";
 import { createShop } from "./shops.ts";
 import { createOwner } from "./users.ts";
 
@@ -236,6 +239,40 @@ describe("checkout to delivery (PayU)", () => {
   it("says clearly when a shop has no payment gateway", async () => {
     await assert.rejects(createCheckout(bareShopId, { items: [{ slug: "cocoa", quantity: 1 }], customer, address }, back), /Payments are not set up/);
     await fulfil(bareShopId, "00000000-0000-4000-8000-000000000000"); // no such order: no-op
+  });
+});
+
+describe("store maintenance", () => {
+  it("finds orders by number, name, email or phone digits", async () => {
+    const byNo = await listOrdersForShop(shopId, undefined, "tst-1001");
+    assert.deepEqual(byNo.map((o) => o.number), ["TST-1001"]);
+    assert.ok((await listOrdersForShop(shopId, undefined, "98765 43210")).length >= 2, "phone with a space");
+    assert.equal((await listOrdersForShop(shopId, undefined, "nobody-matches-this")).length, 0);
+  });
+
+  it("counts what needs attention and exports paid orders", async () => {
+    const a = await attentionCounts(shopId);
+    assert.equal(a.notSent, 0);
+    assert.equal(a.unpaid, 0, "the unpaid one was cancelled");
+    const rows = await ordersForExport(shopId, 30);
+    assert.ok(rows.length >= 2 && rows.every((r) => r.paidAt && r.items.length));
+  });
+
+  it("records the last sync for the overview", async () => {
+    const s = await getShopState(shopId);
+    assert.ok(s.lastSync?.at, "syncShop ran in the reconciliation test");
+  });
+
+  it("quick-edits only what changed and bumps the last-edit time", async () => {
+    const before = await lastProductEdit(shopId);
+    const list = await listProducts(shopId);
+    const rows = list.map((p) => ({ id: p.id, price: String(p.priceMinor / 100), status: p.status }));
+    assert.equal(await quickEdit(shopId, rows), 0, "nothing changed");
+    const cocoa = rows.find((r) => list.find((p) => p.id === r.id)?.slug === "cocoa")!;
+    assert.equal(await quickEdit(shopId, rows.map((r) => (r === cocoa ? { ...r, price: "999" } : r))), 1);
+    assert.equal((await storefrontProducts(shopId))[0].priceMinor, 99900);
+    assert.ok(new Date((await lastProductEdit(shopId))!) > new Date(before!));
+    await assert.rejects(quickEdit(shopId, [{ ...cocoa, price: "abc" }]));
   });
 });
 
