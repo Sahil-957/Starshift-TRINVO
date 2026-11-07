@@ -10,7 +10,14 @@ let transport: Transporter | null = null;
 
 export const mailEnabled = () => Boolean(process.env.SMTP_USER && process.env.SMTP_PASS);
 
-export async function sendMail(m: { to: string; subject: string; text: string; fromName?: string; replyTo?: string }) {
+export async function sendMail(m: {
+  to: string;
+  subject: string;
+  text: string;
+  html?: string;
+  fromName?: string;
+  replyTo?: string;
+}) {
   if (!mailEnabled()) return false;
   transport ??= nodemailer.createTransport({
     service: "gmail",
@@ -22,6 +29,7 @@ export async function sendMail(m: { to: string; subject: string; text: string; f
     replyTo: m.replyTo,
     subject: m.subject,
     text: m.text,
+    html: m.html,
   });
   return true;
 }
