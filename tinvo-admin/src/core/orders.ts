@@ -45,7 +45,7 @@ export const checkoutInput = z.object({
     .max(20),
   customer: z.object({
     name: z.string().trim().min(2, "Enter your name").max(80),
-    email: z.email("Enter a valid email").transform((v) => v.trim().toLowerCase()),
+    email: z.string().trim().toLowerCase().pipe(z.email("Enter a valid email")),
     phone: z.string().transform((v, ctx) => {
       const p = normalisePhone(v);
       if (!p) ctx.addIssue({ code: "custom", message: "Enter a 10-digit mobile number" });

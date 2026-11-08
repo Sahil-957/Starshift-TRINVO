@@ -9,7 +9,7 @@ declare module "next-auth" {
   }
 }
 
-const login = z.object({ email: z.email(), password: z.string().min(1).max(200) });
+const login = z.object({ email: z.string().trim().toLowerCase().pipe(z.email()), password: z.string().min(1).max(200) });
 
 // Email + password only, so sessions are signed JWT cookies and no adapter tables
 // are needed. Wrong passwords are rate limited in the sign-in action

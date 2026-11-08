@@ -1,3 +1,4 @@
+import { tooMany } from "@/lib/limit";
 import { adminFetch, checkoutEnabled, siteOrigin } from "@/lib/admin-api";
 
 /**
@@ -6,6 +7,8 @@ import { adminFetch, checkoutEnabled, siteOrigin } from "@/lib/admin-api";
  */
 export async function POST(req: Request) {
   if (!checkoutEnabled) return Response.json({ error: "Checkout isn't open yet." }, { status: 503 });
+  const limited = tooMany(req, "checkout", 20);
+  if (limited) return limited;
   const returnUrl = `${siteOrigin(req)}/api/checkout/payu`;
   const body = { ...(await req.json()), returnUrl };
   const res = await adminFetch("/checkouts", { method: "POST", body: JSON.stringify(body) });

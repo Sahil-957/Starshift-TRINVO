@@ -27,7 +27,7 @@ export async function listTeam(shopId: string) {
 }
 
 export const memberInput = z.object({
-  email: z.email().transform((v) => v.trim().toLowerCase()),
+  email: z.string().trim().toLowerCase().pipe(z.email()),
   name: z.string().trim().max(80),
   role: z.enum(["manager", "staff"]),
   /** only used when the email has no account yet */

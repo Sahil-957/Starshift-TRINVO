@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import ProductFrame from "@/components/ProductFrame";
-import { formatPrice, getProduct } from "@/data/products";
+import { formatPrice, getProduct, shippingFor } from "@/data/products";
 import { cart, useCart } from "@/lib/cart";
 
 /** Lines with a product that is still on sale; anything else is dropped from view. */
@@ -62,7 +62,9 @@ export default function CartView() {
           <p className="text-[15px] text-ash">
             Subtotal <span className="ml-3 font-mono text-xl text-chalk">{formatPrice(subtotal)}</span>
           </p>
-          <p className="mt-1 text-[13px] text-dim">Prices include GST. Shipping is shown at checkout.</p>
+          <p className="mt-1 text-[13px] text-dim">
+            Shipping {shippingFor(subtotal) ? formatPrice(shippingFor(subtotal)) : "free"} · Prices include GST.
+          </p>
         </div>
         <Link href="/checkout" className="label bg-chalk px-10 py-4 text-void hover:bg-bronze">
           Checkout

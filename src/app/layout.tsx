@@ -4,6 +4,7 @@ import Announcement from "@/components/Announcement";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import { checkoutEnabled } from "@/lib/admin-api";
+import { SITE } from "@/lib/site";
 import "./globals.css";
 
 const sans = Geist({
@@ -19,6 +20,8 @@ const mono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  // share previews (WhatsApp, Instagram…) need absolute image links
+  metadataBase: new URL(SITE),
   title: {
     default: "TINVO — Make every sip your style",
     template: "%s · TINVO",
@@ -30,6 +33,7 @@ export const metadata: Metadata = {
     description: "Ten designs on one 20 oz double-wall stainless tumbler. Not just another tumbler.",
     siteName: "TINVO",
     type: "website",
+    images: ["/products/lineup.webp"],
   },
 };
 

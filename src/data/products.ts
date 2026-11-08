@@ -234,6 +234,7 @@ const baseProducts: Product[] = [
  */
 type Synced = {
   products?: Record<string, { name: string; tagline: string; description: string; priceMinor: number }>;
+  shipping?: { flatMinor: number; freeOverMinor: number | null };
 };
 const admin = (synced as Synced).products;
 
@@ -259,6 +260,27 @@ export function getProduct(slug: string): Product | undefined {
 }
 
 export const formatPrice = (value: number) => `₹${value.toLocaleString("en-IN")}`;
+
+/**
+ * The shipping rule checkout applies, in rupees: synced from the admin's Settings,
+ * or the storefront's own figures when it isn't connected. Same maths as the
+ * admin's pricing (free at or over `freeOver`, otherwise `flat`).
+ */
+const rule = (synced as Synced).shipping;
+export const shipping = rule
+  ? { flat: rule.flatMinor / 100, freeOver: rule.freeOverMinor === null ? null : rule.freeOverMinor / 100 }
+  : { flat: 79, freeOver: 1999 as number | null };
+
+export const shippingFor = (subtotal: number) =>
+  shipping.flat === 0 || (shipping.freeOver !== null && subtotal >= shipping.freeOver) ? 0 : shipping.flat;
+
+/** One line for banners: "Free shipping across India" or "Free shipping over ₹1,999". */
+export const shippingPromise =
+  shipping.flat === 0
+    ? "Free shipping across India"
+    : shipping.freeOver !== null
+      ? `Free shipping over ${formatPrice(shipping.freeOver)}`
+      : `${formatPrice(shipping.flat)} flat shipping`;
 
 /** Editorial stills not tied to one design, in `public/products/`. */
 export const siteImages: { manifesto?: string } = {

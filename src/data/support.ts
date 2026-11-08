@@ -1,11 +1,21 @@
 /**
  * Customer-facing support content: shipping, returns, care, bulk and FAQ.
  *
- * FIGURES ARE PROVISIONAL. Delivery windows, charges, minimums and lead times
- * below are placeholders until courier and supplier contracts are signed.
- * Pages carrying numbers set `provisional`, which renders a visible notice —
- * clear every one of those before launch.
+ * Delivery windows and bulk lead times are estimates until confirmed with the
+ * printing and courier partners; pages carrying them set `provisional`, which
+ * renders a visible notice. Shipping charges come from the admin (see `shipping`).
  */
+import { formatPrice, shipping } from "./products";
+
+const shippingRows: [string, string][] =
+  shipping.flat === 0
+    ? [["Every order, anywhere in India", "Free"]]
+    : shipping.freeOver !== null
+      ? [
+          [`Orders of ${formatPrice(shipping.freeOver)} or more`, "Free"],
+          [`Orders under ${formatPrice(shipping.freeOver)}`, `${formatPrice(shipping.flat)} flat`],
+        ]
+      : [["Every order", `${formatPrice(shipping.flat)} flat`]];
 
 export type Section = {
   heading: string;
@@ -46,7 +56,7 @@ export const supportPages: SupportPage[] = [
       {
         heading: "Where we ship",
         body: [
-          "We ship across India at launch. International shipping is not open yet — if you are outside India and want a piece, write to us and we will tell you honestly when we can get there.",
+          "We ship across India. International shipping is not open yet — if you are outside India and want a piece, write to us and we will tell you honestly when we can get there.",
         ],
       },
       {
@@ -63,22 +73,18 @@ export const supportPages: SupportPage[] = [
       },
       {
         heading: "What it costs",
-        rows: [
-          ["Orders over ₹1,999", "Free"],
-          ["Orders under ₹1,999", "₹79 flat"],
-          ["Cash on delivery", "Not available at launch"],
-        ],
+        rows: [...shippingRows, ["Cash on delivery", "Not available"]],
       },
       {
         heading: "Tracking",
         body: [
-          "You get a tracking link by email and SMS the moment the parcel leaves us. If the tracking has not moved for three working days, tell us — we will chase the courier rather than ask you to.",
+          "You get a tracking link by email the moment the parcel leaves us, and you can check it any time on Track your order. If the tracking has not moved for three working days, tell us — we will chase the courier rather than ask you to.",
         ],
       },
       {
         heading: "If it arrives damaged",
         body: [
-          "Photograph the parcel before you unpack it fully and send the pictures within 48 hours of delivery. Transit damage is our problem, not yours: we replace the piece and arrange the pickup.",
+          "Record an unboxing video from the sealed parcel, and email it with photos of the damage within 7 days of delivery. Transit damage is our problem, not yours: once the claim is verified we replace the piece or refund you. The full process is under Returns & refunds.",
         ],
       },
     ],
@@ -127,7 +133,7 @@ export const supportPages: SupportPage[] = [
         heading: "Replacement or refund",
         body: [
           "Where both are possible on an approved claim, you choose. Say which you would prefer when you report the problem.",
-          "A replacement is remade and dispatched within 2\u20133 working days of approval; delivery time on top of that depends on your pin code. A refund is issued to your original payment method — how quickly it appears is down to your bank, and we will give you the real figure once our payment provider is live rather than guess at one here.",
+          "A replacement is remade and dispatched within 2\u20133 working days of approval; delivery time on top of that depends on your pin code. A refund is issued to your original payment method — it goes back through PayU and usually appears within 5–7 working days, depending on your bank.",
         ],
       },
       {
@@ -319,7 +325,7 @@ export const supportPages: SupportPage[] = [
           },
           {
             q: "Do you take cash on delivery?",
-            a: "Not at launch. Cards, UPI and net banking when checkout opens.",
+            a: "No. You pay securely online through PayU with UPI, a card or netbanking.",
           },
         ],
       },
@@ -352,7 +358,7 @@ export const supportPages: SupportPage[] = [
           },
           {
             q: "How are approved refunds processed?",
-            a: "To your original payment method. A replacement, if you would rather have one, is remade and dispatched within 2\u20133 working days of approval. How fast a refund actually lands depends on your bank, and we will give you that figure once our payment provider is live rather than invent one now.",
+            a: "To your original payment method. A replacement, if you would rather have one, is remade and dispatched within 2\u20133 working days of approval. Refunds go back through PayU and usually reach your account within 5–7 working days, depending on your bank.",
           },
           {
             q: "Does my tumbler have a warranty?",

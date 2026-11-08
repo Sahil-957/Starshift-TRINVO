@@ -44,10 +44,14 @@ export default async function OrderPage({ searchParams }: PageProps<"/order">) {
   let order: Order | null = null;
   let error: string | null = null;
   if (number && email) {
-    const res = await adminFetch(`/orders?number=${encodeURIComponent(number)}&email=${encodeURIComponent(email)}`);
-    const data = await res.json();
-    if (res.ok) order = data.order;
-    else error = data.error ?? "We couldn't look that up right now.";
+    try {
+      const res = await adminFetch(`/orders?number=${encodeURIComponent(number)}&email=${encodeURIComponent(email)}`);
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.order) order = data.order;
+      else error = data.error ?? "We couldn't look that up right now.";
+    } catch {
+      error = "We couldn't look that up right now. Please try again in a minute.";
+    }
   }
   const reached = order ? steps.findIndex(([s]) => s === order.status) : -1;
 

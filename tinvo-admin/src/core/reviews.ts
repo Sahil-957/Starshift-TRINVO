@@ -17,7 +17,7 @@ const REVIEWABLE = ["paid", "in_production", "shipped", "delivered"] as const;
 export const reviewInput = z.object({
   slug: z.string().trim().min(1).max(80),
   number: z.string().trim().min(1, "Enter your order number.").max(40),
-  email: z.email("Enter the email you ordered with.").trim().max(200),
+  email: z.string().trim().max(200).pipe(z.email("Enter the email you ordered with.")),
   name: z.string().trim().min(1, "Enter your name.").max(60),
   rating: z.coerce.number().int().min(1, "Choose a star rating.").max(5),
   title: z.string().trim().max(80).default(""),

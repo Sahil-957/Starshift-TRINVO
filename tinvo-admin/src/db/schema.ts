@@ -353,3 +353,17 @@ export const reviews = pgTable(
     check("reviews_rating_range", sql`${t.rating} between 1 and 5`),
   ],
 );
+
+// ─── Drop list ──────────────────────────────────────────────────────────────
+
+/** Emails from the storefront's "new designs go to the list first" sign-up. */
+export const subscribers = pgTable(
+  "subscribers",
+  {
+    id: id(),
+    shopId: uuid("shop_id").notNull().references(() => shops.id, { onDelete: "restrict" }),
+    email: text("email").notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex("subscribers_shop_email_key").on(t.shopId, t.email)],
+);

@@ -245,42 +245,70 @@ export default function Hero() {
             </span>
           </figcaption>
 
+          {/* the designs as little cut-out bottles; the chosen one lifts, glows in its own colour and runs the timer */}
           <div
-            className="-mx-5 mt-5 flex snap-x gap-1.5 overflow-x-auto px-5 pb-1 sm:mx-0 sm:justify-center sm:px-0"
+            className="rail -mx-5 mt-6 flex snap-x items-end gap-2.5 overflow-x-auto px-5 pb-2 pt-3 sm:mx-0 sm:justify-center sm:px-0"
             role="radiogroup"
             aria-label="Choose a design"
           >
-            {products.map((p, i) => (
-              <button
-                key={p.slug}
-                type="button"
-                role="radio"
-                aria-checked={i === active}
-                aria-label={p.name}
-                title={p.name}
-                onClick={() => pick(i)}
-                onDragStart={dragAsLink(p.slug)}
-                className={`relative h-[4.5rem] w-11 shrink-0 snap-start overflow-hidden border transition-[opacity,transform,border-color] duration-500 ${
-                  i === active ? "-translate-y-1 border-chalk/60 opacity-100" : "border-transparent opacity-50 hover:opacity-90"
-                }`}
-              >
-                <Image
-                  src={`/products/${p.images[0].file}`}
-                  alt=""
-                  fill
-                  sizes="120px"
-                  className="origin-[50%_56%] scale-[2.1] object-cover"
-                />
-                {auto && i === active && (
+            {products.map((p, i) => {
+              const on = i === active;
+              const cut = `url(/products/mask/${p.slug}.png)`;
+              return (
+                <button
+                  key={p.slug}
+                  type="button"
+                  role="radio"
+                  aria-checked={on}
+                  aria-label={p.name}
+                  title={p.name}
+                  onClick={() => pick(i)}
+                  onDragStart={dragAsLink(p.slug)}
+                  className={`relative flex w-9 shrink-0 snap-start flex-col items-center transition-[opacity,transform] duration-500 ${
+                    on ? "-translate-y-1.5 opacity-100" : "opacity-45 hover:-translate-y-0.5 hover:opacity-90"
+                  }`}
+                >
                   <span
-                    // remount restarts the timer; its end moves the rail on
-                    key={active}
-                    onAnimationEnd={() => setActive((active + 1) % products.length)}
-                    className="absolute inset-x-0 bottom-0 h-0.5 origin-left animate-fill bg-chalk group-hover/hero:[animation-play-state:paused] motion-reduce:hidden"
+                    aria-hidden="true"
+                    className="absolute bottom-3 left-1/2 h-7 w-12 -translate-x-1/2 rounded-full blur-md transition-opacity duration-500"
+                    style={{ backgroundColor: p.tone, opacity: on ? 0.6 : 0 }}
                   />
-                )}
-              </button>
-            ))}
+                  <span className="relative block h-[5.25rem] w-full">
+                    <Image
+                      src={`/products/${p.images[0].file}`}
+                      alt=""
+                      fill
+                      sizes="120px"
+                      className="origin-[50%_54%] scale-[1.4] object-cover"
+                      style={{
+                        maskImage: cut,
+                        WebkitMaskImage: cut,
+                        maskSize: "cover",
+                        WebkitMaskSize: "cover",
+                        maskPosition: "center",
+                        WebkitMaskPosition: "center",
+                        maskRepeat: "no-repeat",
+                        WebkitMaskRepeat: "no-repeat",
+                      }}
+                    />
+                  </span>
+                  <span className={`mt-2 block h-0.5 w-6 overflow-hidden rounded-full ${on ? "bg-chalk/15" : ""}`}>
+                    {on &&
+                      (auto ? (
+                        <span
+                          // remount restarts the timer; its end moves the rail on
+                          key={active}
+                          onAnimationEnd={() => setActive((active + 1) % products.length)}
+                          className="block h-full origin-left animate-fill group-hover/hero:[animation-play-state:paused] motion-reduce:hidden"
+                          style={{ backgroundColor: p.accent }}
+                        />
+                      ) : (
+                        <span className="block h-full" style={{ backgroundColor: p.accent }} />
+                      ))}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </figure>
       </div>

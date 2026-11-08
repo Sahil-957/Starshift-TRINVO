@@ -23,6 +23,7 @@ import {
   attentionCounts,
   cancelOrder,
   CheckoutError,
+  checkoutInput,
   createCheckout,
   fulfil,
   getOrderDetail,
@@ -35,6 +36,7 @@ import {
   syncShop,
 } from "./orders.ts";
 import { shopReport } from "./reports.ts";
+import { listSubscribers, subscribe, unsubscribe } from "./subscribers.ts";
 import { listReviews, pendingReviewCount, publicName, publishedReviews, setReviewStatus, submitReview } from "./reviews.ts";
 import { getShopState, setCheckoutSettings, updateShopDetails } from "./settings.ts";
 import { createShop } from "./shops.ts";
@@ -135,7 +137,7 @@ after(async () => {
   for (const t of ["reviews", "order_events", "order_tax_lines", "order_items", "refunds", "webhook_events"]) {
     await c.query(`delete from ${t} where shop_id in ${inOrg}`, [orgId]);
   }
-  for (const t of ["orders", "products", "shop_credentials", "shop_settings", "api_keys", "shop_members"]) {
+  for (const t of ["orders", "products", "shop_credentials", "shop_settings", "api_keys", "shop_members", "subscribers"]) {
     await c.query(`delete from ${t} where shop_id in ${inOrg}`, [orgId]);
   }
   await c.query("delete from audit_logs where org_id = $1", [orgId]);
@@ -345,5 +347,25 @@ describe("reviews", () => {
   it("shows only first name and last initial", () => {
     assert.equal(publicName("  priya   sharma "), "priya S.");
     assert.equal(publicName("Asha"), "Asha");
+  });
+});
+
+describe("drop list", () => {
+  it("stores each address once, lower-cased, per shop", async () => {
+    await subscribe(shopId, ` Fan-${run}@Test.invalid `); // phone keyboards add a trailing space
+    await subscribe(shopId, `fan-${run}@test.invalid`);
+    await assert.rejects(subscribe(shopId, "not an email"));
+    const list = await listSubscribers(shopId);
+    assert.deepEqual(list.map((s) => s.email), [`fan-${run}@test.invalid`]);
+    assert.equal((await listSubscribers(bareShopId)).length, 0, "other shops see nothing");
+    await unsubscribe(shopId, list[0].id);
+    assert.equal((await listSubscribers(shopId)).length, 0);
+  });
+});
+
+describe("forms", () => {
+  it("accepts an email with spaces around it at checkout (phone autocomplete)", () => {
+    const r = checkoutInput.parse({ items: [{ slug: "cocoa", quantity: 1 }], customer: { ...customer, email: ` Buyer@Test.invalid ` }, address });
+    assert.equal(r.customer.email, "buyer@test.invalid");
   });
 });

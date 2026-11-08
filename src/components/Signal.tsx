@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-type Status = "idle" | "invalid" | "done";
+type Status = "idle" | "invalid" | "sending" | "failed" | "done";
 
 /** Simple structural check — no library, no regex escaping surprises. */
 function looksLikeEmail(raw: string) {
@@ -18,17 +18,25 @@ function looksLikeEmail(raw: string) {
   );
 }
 
-/**
- * Front-end only. No list provider is wired up yet, so the success state says
- * exactly that rather than implying the address was stored.
- */
+/** The drop list: addresses are stored in the admin (Drop list tab). */
 export default function Signal() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<Status>("idle");
 
-  const submit = (event: React.FormEvent) => {
+  const submit = async (event: React.FormEvent) => {
     event.preventDefault();
-    setStatus(looksLikeEmail(email) ? "done" : "invalid");
+    if (!looksLikeEmail(email)) return setStatus("invalid");
+    setStatus("sending");
+    try {
+      const res = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      setStatus(res.ok ? "done" : "failed");
+    } catch {
+      setStatus("failed");
+    }
   };
 
   return (
@@ -51,10 +59,10 @@ export default function Signal() {
           <div>
             {status === "done" ? (
               <div className="border hairline p-8">
-                <p className="label text-rose">Noted</p>
+                <p className="label text-rose">You&apos;re on the list</p>
                 <p className="mt-5 text-[17px] leading-relaxed text-chalk">
-                  The list itself goes live with the store, so nothing has been
-                  sent anywhere yet. Check back when we open.
+                  You&apos;ll hear about new designs before anyone else. One email a
+                  month at most.
                 </p>
                 <button
                   type="button"
@@ -79,7 +87,7 @@ export default function Signal() {
                     value={email}
                     onChange={(e) => {
                       setEmail(e.target.value);
-                      if (status === "invalid") setStatus("idle");
+                      if (status === "invalid" || status === "failed") setStatus("idle");
                     }}
                     placeholder="you@example.com"
                     aria-invalid={status === "invalid"}
@@ -89,19 +97,23 @@ export default function Signal() {
                   />
                   <button
                     type="submit"
-                    className="label shrink-0 bg-chalk px-8 py-4 text-void transition-colors hover:bg-rose"
+                    disabled={status === "sending"}
+                    className="label shrink-0 bg-chalk px-8 py-4 text-void transition-colors hover:bg-rose disabled:opacity-60"
                   >
-                    Join
+                    {status === "sending" ? "Joining…" : "Join"}
                   </button>
                 </div>
                 <p
+                  role={status === "invalid" || status === "failed" ? "alert" : undefined}
                   className={`mt-4 text-[13px] ${
-                    status === "invalid" ? "text-rose" : "text-dim"
+                    status === "invalid" || status === "failed" ? "text-rose" : "text-dim"
                   }`}
                 >
                   {status === "invalid"
                     ? "That address does not look right — check it and try again."
-                    : "No sharing, no selling, unsubscribe in one click."}
+                    : status === "failed"
+                      ? "Couldn't add you just now. Please try again in a moment."
+                      : "No sharing, no selling. Reply to any email to come off the list."}
                 </p>
               </form>
             )}

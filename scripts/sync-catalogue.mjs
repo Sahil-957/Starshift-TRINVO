@@ -1,6 +1,6 @@
 /**
- * Runs before every storefront build: pulls the shop's active products from the
- * admin into src/data/catalogue.json. Without ADMIN_API_URL / STOREFRONT_TOKEN
+ * Runs before every storefront build: pulls the shop's active products and its
+ * shipping rule from the admin into src/data/catalogue.json. Without ADMIN_API_URL / STOREFRONT_TOKEN
  * it does nothing, and the storefront's own catalogue is used as is.
  * If the admin is unreachable, the last synced file is kept rather than failing.
  */
@@ -17,9 +17,9 @@ if (!url || !token) {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) throw new Error(`HTTP ${res.status} ${await res.text()}`);
-    const { products } = await res.json();
+    const { products, shipping } = await res.json();
     const bySlug = Object.fromEntries(products.map(({ slug, ...rest }) => [slug, rest]));
-    await writeFile(out, `${JSON.stringify({ syncedAt: new Date().toISOString(), products: bySlug }, null, 2)}\n`);
+    await writeFile(out, `${JSON.stringify({ syncedAt: new Date().toISOString(), products: bySlug, shipping }, null, 2)}\n`);
     console.log(`catalogue: synced ${products.length} active products from the admin`);
   } catch (e) {
     console.warn(`catalogue: sync failed, keeping the last synced file (${e.message})`);

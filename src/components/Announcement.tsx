@@ -1,6 +1,8 @@
+import { shippingPromise } from "@/data/products";
+
 const notes = [
   { text: "Make every sip your style", color: "var(--color-plum)" },
-  { text: "Free shipping over ₹1,999", color: "var(--color-cobalt)" },
+  { text: shippingPromise, color: "var(--color-cobalt)" },
   { text: "Made in India", color: "var(--color-jade)" },
   { text: "Double-wall stainless", color: "var(--color-bronze)" },
 ];

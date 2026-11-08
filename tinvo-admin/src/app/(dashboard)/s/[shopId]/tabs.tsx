@@ -8,6 +8,7 @@ const tabs = [
   ["/orders", "Orders"],
   ["/products", "Products"],
   ["/reviews", "Reviews"],
+  ["/drop-list", "Drop list"],
   ["/reports", "Reports"],
   ["/team", "Team"],
   ["/settings", "Settings"],

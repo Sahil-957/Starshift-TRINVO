@@ -1,3 +1,4 @@
+import { tooMany } from "@/lib/limit";
 import { adminFetch, checkoutEnabled } from "@/lib/admin-api";
 
 const none = { count: 0, average: null, breakdown: {}, reviews: [] };
@@ -13,6 +14,8 @@ export async function GET(req: Request) {
 /** A buyer's review; the admin checks the order and holds it for approval. */
 export async function POST(req: Request) {
   if (!checkoutEnabled) return Response.json({ error: "Reviews open with checkout." }, { status: 503 });
+  const limited = tooMany(req, "review", 8);
+  if (limited) return limited;
   const res = await adminFetch("/reviews", { method: "POST", body: await req.text() });
   return Response.json(await res.json().catch(() => ({})), { status: res.status });
 }

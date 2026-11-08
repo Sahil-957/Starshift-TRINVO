@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useCartLines } from "../cart/view";
 import { STATES } from "@/data/india";
-import { formatPrice } from "@/data/products";
+import { formatPrice, shippingFor } from "@/data/products";
 
 /** Sends the browser to PayU's payment page with the admin-signed fields. */
 function goToPayu(action: string, fields: Record<string, string>) {
@@ -67,8 +67,8 @@ export default function CheckoutForm({ returnError }: { returnError?: string }) 
           address: { line1: v("line1"), line2: v("line2"), city: v("city"), state: v("state"), pin: v("pin") },
         }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Checkout failed. Please try again.");
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.payu) throw new Error(data.error ?? "Checkout failed. Please try again.");
       // the cart is kept until PayU confirms; the order page clears it
       goToPayu(data.payu.action, data.payu.fields);
     } catch (err) {
@@ -140,10 +140,16 @@ export default function CheckoutForm({ returnError }: { returnError?: string }) 
             </li>
           ))}
         </ul>
-        <p className="mt-5 flex justify-between border-t hairline pt-4 text-[15px] text-chalk">
+        <p className="mt-5 flex justify-between border-t hairline pt-4 text-[14px] text-ash">
           Subtotal <span className="font-mono tabular-nums">{formatPrice(subtotal)}</span>
         </p>
-        <p className="mt-2 text-[13px] text-dim">Shipping, if any, is added on the payment page. Prices include GST.</p>
+        <p className="mt-2 flex justify-between text-[14px] text-ash">
+          Shipping <span className="font-mono tabular-nums">{shippingFor(subtotal) ? formatPrice(shippingFor(subtotal)) : "Free"}</span>
+        </p>
+        <p className="mt-3 flex justify-between border-t hairline pt-4 text-[15px] text-chalk">
+          Total <span className="font-mono tabular-nums">{formatPrice(subtotal + shippingFor(subtotal))}</span>
+        </p>
+        <p className="mt-2 text-[13px] text-dim">Prices include GST.</p>
       </aside>
     </div>
   );
