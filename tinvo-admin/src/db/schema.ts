@@ -9,6 +9,8 @@
 import { sql } from "drizzle-orm";
 import {
   char,
+  check,
+  index,
   integer,
   jsonb,
   pgEnum,
@@ -319,4 +321,35 @@ export const apiKeys = pgTable(
     createdAt: createdAt(),
   },
   (t) => [uniqueIndex("api_keys_hash_key").on(t.keyHash)],
+);
+
+// ─── Reviews ────────────────────────────────────────────────────────────────
+
+export const reviewStatus = pgEnum("review_status", ["pending", "published", "hidden"]);
+
+/**
+ * Verified-buyer reviews: written against a paid order that contains the
+ * product, one per product per order, shown only once the shop publishes it.
+ */
+export const reviews = pgTable(
+  "reviews",
+  {
+    id: id(),
+    shopId: uuid("shop_id").notNull().references(() => shops.id, { onDelete: "restrict" }),
+    productId: uuid("product_id").notNull().references(() => products.id, { onDelete: "restrict" }),
+    orderId: uuid("order_id").notNull().references(() => orders.id, { onDelete: "restrict" }),
+    rating: integer("rating").notNull(),
+    title: text("title").notNull().default(""),
+    body: text("body").notNull(),
+    /** shown publicly: first name and last initial */
+    authorName: text("author_name").notNull(),
+    status: reviewStatus("status").notNull().default("pending"),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex("reviews_order_product_key").on(t.orderId, t.productId),
+    index("reviews_product_status_idx").on(t.productId, t.status),
+    check("reviews_rating_range", sql`${t.rating} between 1 and 5`),
+  ],
 );

@@ -6,6 +6,7 @@ import DesignPicker from "@/components/DesignPicker";
 import { checkoutEnabled } from "@/lib/admin-api";
 import ProductGallery from "@/components/ProductGallery";
 import ReturnsSummary from "@/components/ReturnsSummary";
+import ProductReviews, { RatingSummary } from "@/components/ProductReviews";
 import ProductCard from "@/components/ProductCard";
 import { getPolicy } from "@/data/policy";
 import { barrel, formatPrice, getProduct, goodToKnow, products } from "@/data/products";
@@ -84,6 +85,7 @@ export default async function ProductPage({ params }: PageProps<"/shop/[slug]">)
             {product.name}
           </h1>
           <p className="mt-3 text-[16px] text-ash">{product.tagline}</p>
+          <RatingSummary slug={product.slug} accent={product.accent} />
 
           <div className="mt-6 flex items-baseline gap-4">
             <p className="font-mono text-3xl tracking-tight tabular-nums text-chalk">
@@ -217,6 +219,8 @@ export default async function ProductPage({ params }: PageProps<"/shop/[slug]">)
           )}
         </div>
       </div>
+
+      <ProductReviews slug={product.slug} name={product.name} accent={product.accent} />
 
       <section className="border-t hairline py-16 lg:py-24">
         <div className="mx-auto max-w-[1500px] px-5 sm:px-8">

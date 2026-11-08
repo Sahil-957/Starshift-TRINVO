@@ -22,6 +22,7 @@ import {
   setShopState,
   updateShopDetails,
 } from "@/core/settings";
+import { setReviewStatus } from "@/core/reviews";
 import { addMember, removeMember } from "@/core/team";
 
 const f = (form: FormData, k: string) => String(form.get(k) ?? "");
@@ -153,6 +154,15 @@ export async function cancelAction(shopId: string, orderId: string): Promise<For
   });
   revalidatePath(`/s/${shopId}/orders/${orderId}`);
   return r;
+}
+
+// ─── reviews ────────────────────────────────────────────────────────────────
+
+export async function reviewStatusAction(shopId: string, reviewId: string, status: "published" | "hidden"): Promise<FormState> {
+  await requireShop(shopId, "manage");
+  await setReviewStatus(shopId, reviewId, status);
+  revalidatePath(`/s/${shopId}/reviews`);
+  return { ok: status === "published" ? "Published." : "Hidden." };
 }
 
 // ─── team ───────────────────────────────────────────────────────────────────

@@ -1,7 +1,9 @@
+"use client";
+
 import Link from "next/link";
+import { useReviews } from "./ProductReviews";
 import Reveal from "./Reveal";
 import SectionHead from "./SectionHead";
-import { reviews } from "@/data/products";
 
 function Stars({ rating }: { rating: number }) {
   return (
@@ -13,13 +15,14 @@ function Stars({ rating }: { rating: number }) {
 }
 
 /**
- * Renders real reviews once `reviews` in data/products.ts is populated with
- * verified purchases. Until then it shows an honest empty state rather than
- * placeholder testimonials.
+ * The latest reviews published in the admin, from verified orders only. Until
+ * there are some it shows an honest empty state rather than placeholder testimonials.
  */
 export default function Reviews() {
-  const count = reviews.length;
-  const average = count > 0 ? reviews.reduce((s, r) => s + r.rating, 0) / count : 0;
+  const data = useReviews("");
+  const reviews = data?.reviews ?? [];
+  const count = data?.count ?? 0;
+  const average = data?.average ?? 0;
 
   return (
     <section
@@ -40,7 +43,7 @@ export default function Reviews() {
           }
         />
 
-        {count === 0 ? (
+        {!data ? null : count === 0 ? (
           <Reveal className="mt-14">
             <div className="border hairline p-8 sm:p-14">
               <div className="max-w-2xl">
@@ -62,32 +65,30 @@ export default function Reviews() {
                     Be the first
                   </Link>
                   <Link
-                    href="/contact"
+                    href="/shop"
                     className="label border hairline px-7 py-4 text-chalk transition-colors hover:bg-chalk hover:text-void"
                   >
-                    Already own one?
+                    Own one? Review it on its page
                   </Link>
                 </div>
               </div>
             </div>
           </Reveal>
         ) : (
-          <ul className="mt-14 grid gap-px border hairline bg-chalk/10 md:grid-cols-2 lg:grid-cols-3">
+          <ul className="mt-14 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {reviews.map((review, i) => (
               <Reveal as="li" key={review.id} delay={(i % 3) * 70}>
-                <article className="flex h-full flex-col bg-void p-7">
+                <article className="flex h-full flex-col border hairline bg-void p-7">
                   <Stars rating={review.rating} />
-                  <h3 className="display mt-5 text-xl text-chalk">
-                    {review.title}
-                  </h3>
+                  {review.title && <h3 className="display mt-5 text-xl text-chalk">{review.title}</h3>}
                   <p className="mt-3 flex-1 text-[15px] leading-relaxed text-ash">
                     {review.body}
                   </p>
                   <footer className="mt-7 flex items-center justify-between border-t hairline pt-4">
                     <span className="label text-chalk">{review.author}</span>
-                    {review.verified && (
-                      <span className="label text-bronze">Verified</span>
-                    )}
+                    <Link href={`/shop/${review.slug}#reviews`} className="label text-bronze hover:text-chalk">
+                      {review.product} · Verified
+                    </Link>
                   </footer>
                 </article>
               </Reveal>

@@ -5,6 +5,7 @@ import { listProducts } from "@/core/catalogue";
 import { configuredProviders, getCredentials } from "@/core/credentials";
 import { attentionCounts, listOrdersForShop } from "@/core/orders";
 import { shopReport } from "@/core/reports";
+import { pendingReviewCount } from "@/core/reviews";
 import { getShop, getShopState } from "@/core/settings";
 import { formatMinor } from "@/lib/india";
 import { StatusBadge } from "./orders/status";
@@ -14,7 +15,7 @@ export const metadata: Metadata = { title: "Shop" };
 export default async function ShopOverview({ params }: PageProps<"/s/[shopId]">) {
   const { shopId } = await params;
   const shop = await getShop(shopId);
-  const [providers, keys, productList, recent, report, attention, state, payu, qikink] = await Promise.all([
+  const [providers, keys, productList, recent, report, attention, state, payu, qikink, waitingReviews] = await Promise.all([
     configuredProviders(shopId),
     listApiKeys(shopId),
     listProducts(shopId),
@@ -24,6 +25,7 @@ export default async function ShopOverview({ params }: PageProps<"/s/[shopId]">)
     getShopState(shopId),
     getCredentials(shopId, "payu"),
     getCredentials(shopId, "qikink"),
+    pendingReviewCount(shopId),
   ]);
   const has = (p: string) => providers.some((x) => x.provider === p);
   const money = (m: number) => formatMinor(m, shop.settlementCurrency);
@@ -48,6 +50,12 @@ export default async function ShopOverview({ params }: PageProps<"/s/[shopId]">)
       text: `${attention.sending} paid order${attention.sending === 1 ? "" : "s"} waiting to go to Qikink`,
       hint: "Usually sent within seconds; if it stays here, open the order.",
       href: `${orders}?status=paid`,
+    },
+    waitingReviews > 0 && {
+      tone: "text-bronze",
+      text: `${waitingReviews} review${waitingReviews === 1 ? "" : "s"} waiting to be published`,
+      hint: "Read them and publish the ones you want on the website.",
+      href: `/s/${shopId}/reviews`,
     },
     attention.unpaid > 0 && {
       tone: "text-ash",

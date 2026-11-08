@@ -35,6 +35,7 @@ import {
   syncShop,
 } from "./orders.ts";
 import { shopReport } from "./reports.ts";
+import { listReviews, pendingReviewCount, publicName, publishedReviews, setReviewStatus, submitReview } from "./reviews.ts";
 import { getShopState, setCheckoutSettings, updateShopDetails } from "./settings.ts";
 import { createShop } from "./shops.ts";
 import { createOwner } from "./users.ts";
@@ -131,7 +132,7 @@ after(async () => {
   const c = new pg.Client({ connectionString: process.env.DATABASE_URL_UNPOOLED!.replace("sslmode=require", "sslmode=verify-full") });
   await c.connect();
   const inOrg = "(select id from shops where org_id = $1)";
-  for (const t of ["order_events", "order_tax_lines", "order_items", "refunds", "webhook_events"]) {
+  for (const t of ["reviews", "order_events", "order_tax_lines", "order_items", "refunds", "webhook_events"]) {
     await c.query(`delete from ${t} where shop_id in ${inOrg}`, [orgId]);
   }
   for (const t of ["orders", "products", "shop_credentials", "shop_settings", "api_keys", "shop_members"]) {
@@ -303,5 +304,46 @@ describe("storefront tokens", () => {
     const [k] = await listApiKeys(shopId);
     await revokeApiKey(shopId, k.id);
     assert.equal(await shopForToken(`Bearer ${token}`), null);
+  });
+});
+
+describe("reviews", () => {
+  const review = (number: string, extra: Record<string, unknown> = {}) =>
+    submitReview(shopId, { slug: "cocoa", number, email: customer.email.toUpperCase(), name: "Test Buyer", rating: 5, title: "Lovely", body: "Keeps coffee hot all morning.", ...extra });
+
+  it("takes a review only from a paid order that has the design, once", async () => {
+    const all = await listOrdersForShop(shopId);
+    const paid = all.find((o) => ["paid", "in_production", "shipped", "delivered"].includes(o.status))!;
+    const refunded = all.find((o) => o.status === "refunded")!;
+    const unpaid = all.find((o) => o.status === "cancelled" || o.status === "pending_payment")!;
+    await assert.rejects(review(refunded.number), CheckoutError, "refunded order");
+    await assert.rejects(review(unpaid.number), CheckoutError, "unpaid order");
+    await assert.rejects(submitReview(shopId, { slug: "cocoa", number: paid.number, email: "someone@else.invalid", name: "X", rating: 5, body: "Not my order at all." }), CheckoutError);
+    await assert.rejects(review(paid.number, { slug: "hidden" }), CheckoutError, "design not in the order");
+    await assert.rejects(review(paid.number, { rating: 6 }));
+    await review(paid.number);
+    await assert.rejects(review(paid.number), /already reviewed/);
+    assert.ok(mails.some((m) => m.to === "owner@test.invalid" && /5★ review/.test(m.subject)), "owner told");
+  });
+
+  it("shows nothing publicly until published, then the average", async () => {
+    assert.equal((await publishedReviews(shopId, "cocoa")).count, 0);
+    assert.equal(await pendingReviewCount(shopId), 1);
+    const [r] = await listReviews(shopId, "pending");
+    await setReviewStatus(shopId, r.id, "published");
+    const pub = await publishedReviews(shopId, "cocoa");
+    assert.equal(pub.count, 1);
+    assert.equal(pub.average, 5);
+    assert.deepEqual(pub.breakdown, { 5: 1 });
+    assert.equal((await publishedReviews(shopId)).reviews[0].slug, "cocoa", "latest across the shop");
+    assert.equal(pub.reviews[0].author, "Test B.");
+    await setReviewStatus(shopId, r.id, "hidden");
+    assert.equal((await publishedReviews(shopId, "cocoa")).count, 0);
+    assert.equal((await publishedReviews(bareShopId, "cocoa")).count, 0, "other shops see nothing");
+  });
+
+  it("shows only first name and last initial", () => {
+    assert.equal(publicName("  priya   sharma "), "priya S.");
+    assert.equal(publicName("Asha"), "Asha");
   });
 });

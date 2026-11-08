@@ -260,23 +260,6 @@ export function getProduct(slug: string): Product | undefined {
 
 export const formatPrice = (value: number) => `₹${value.toLocaleString("en-IN")}`;
 
-/**
- * Reviews are intentionally empty. Populate only with verified purchases —
- * the Reviews section renders a real empty state until this array fills.
- */
-export type Review = {
-  id: string;
-  author: string;
-  rating: 1 | 2 | 3 | 4 | 5;
-  title: string;
-  body: string;
-  productSlug: string;
-  verified: boolean;
-  date: string;
-};
-
-export const reviews: Review[] = [];
-
 /** Editorial stills not tied to one design, in `public/products/`. */
 export const siteImages: { manifesto?: string } = {
   /** Every design on one sweep, 21:9 */
