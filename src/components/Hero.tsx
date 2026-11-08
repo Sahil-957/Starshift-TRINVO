@@ -47,6 +47,18 @@ export default function Hero() {
     setActive(i);
   };
 
+  /** Swipe the tumbler left/right for the next/previous design. */
+  const swipeStart = useRef<{ x: number; y: number } | null>(null);
+  const swipeEnd = (event: React.TouchEvent) => {
+    const start = swipeStart.current;
+    swipeStart.current = null;
+    if (!start) return;
+    const dx = event.changedTouches[0].clientX - start.x;
+    const dy = event.changedTouches[0].clientY - start.y;
+    if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return; // a tap or a scroll
+    pick((active + (dx < 0 ? 1 : -1) + products.length) % products.length);
+  };
+
   return (
     <section
       ref={stage}
@@ -109,7 +121,11 @@ export default function Hero() {
         </div>
 
         <figure className="order-2 mx-auto w-full max-w-[26rem] lg:order-2 lg:w-auto lg:max-w-none lg:pr-36">
-          <div className="relative mx-auto aspect-[4/5] w-full lg:h-[min(calc(100svh-20rem),48rem)] lg:w-auto">
+          <div
+            onTouchStart={(e) => (swipeStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY })}
+            onTouchEnd={swipeEnd}
+            className="relative mx-auto aspect-[4/5] w-full touch-pan-y lg:h-[clamp(26rem,calc(100svh-9rem),50rem)] lg:w-auto"
+          >
             {/* colour bloom behind the barrel */}
             <div
               aria-hidden="true"
@@ -138,7 +154,7 @@ export default function Hero() {
             <div
               key={lead.slug}
               aria-hidden="true"
-              className="pointer-events-none absolute inset-x-[-12%] top-1/2 animate-sweep select-none lg:inset-x-[-30%]"
+              className="pointer-events-none absolute inset-x-[-12%] top-1/2 animate-sweep select-none lg:inset-x-[-12%]"
               style={{
                 maskImage: edges,
                 WebkitMaskImage: edges,
@@ -202,7 +218,7 @@ export default function Hero() {
                 >
                   <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-chalk shadow-[0_0_10px_2px_rgba(226,255,244,0.5)]" />
                   <span className="h-px w-12 shrink-0 bg-chalk/40" />
-                  <span className="ml-3 min-w-0">
+                  <span className="ml-3 min-w-0 [text-shadow:0_0_14px_var(--color-void),0_0_4px_var(--color-void)]">
                     <span className="block whitespace-nowrap text-[13px] text-chalk">{c.title}</span>
                     <span className="label mt-1 block whitespace-nowrap text-[10px] text-dim">{c.body}</span>
                   </span>
