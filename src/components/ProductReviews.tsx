@@ -31,10 +31,10 @@ export function useReviews(slug: string) {
   return data;
 }
 
-function Stars({ value, color, className = "" }: { value: number; color: string; className?: string }) {
+export function Stars({ value, color, className = "" }: { value: number; color: string; className?: string }) {
   return (
     <span className={`relative inline-block leading-none tracking-[0.12em] ${className}`} style={{ color }} aria-hidden="true">
-      <span className="text-chalk/20">★★★★★</span>
+      <span style={{ color: `color-mix(in oklab, ${color} 28%, transparent)` }}>★★★★★</span>
       <span className="absolute inset-0 overflow-hidden whitespace-nowrap" style={{ width: `${(value / 5) * 100}%` }}>
         ★★★★★
       </span>
@@ -121,7 +121,7 @@ export default function Reviews({ slug, name, accent }: { slug: string; name: st
             <>
               <p className="display mt-6 text-[clamp(1.75rem,3vw,2.5rem)] text-chalk">No reviews yet</p>
               <p className="mt-3 max-w-xs text-[14px] leading-relaxed text-ash">
-                {data ? `Own ${name}? Be the first to tell others what it&apos;s like.` : "Loading…"}
+                {data ? `Own ${name}? Be the first to tell others what it’s like.` : "Loading…"}
               </p>
             </>
           )}
@@ -157,7 +157,7 @@ export default function Reviews({ slug, name, accent }: { slug: string; name: st
                       aria-label={`${s} star${s === 1 ? "" : "s"}`}
                       onClick={() => setRating(s)}
                       className="text-[30px] leading-none transition-transform hover:scale-110"
-                      style={{ color: s <= rating ? accent : "color-mix(in oklab, var(--color-chalk) 20%, transparent)" }}
+                      style={{ color: s <= rating ? accent : `color-mix(in oklab, ${accent} 30%, transparent)` }}
                     >
                       ★
                     </button>
