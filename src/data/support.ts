@@ -95,7 +95,7 @@ export const supportPages: SupportPage[] = [
         heading: "If your order arrives faulty",
         body: [
           "Tell us within 7 days of delivery and we will put it right. That covers a tumbler damaged in transit, a manufacturing defect, a misprinted design, or the wrong item in the box.",
-          "Email hello@tinvo.store with your order number and the evidence below. Claims are verified before they are approved — we cannot promise a refund or replacement in advance of that check, because the fault has to be established before anything is remade.",
+          "Email starshift07@gmail.com with your order number and the evidence below. Claims are verified before they are approved — we cannot promise a refund or replacement in advance of that check, because the fault has to be established before anything is remade.",
         ],
         rows: [
           ["Report within", "7 days of delivery"],
@@ -171,7 +171,7 @@ export const supportPages: SupportPage[] = [
       {
         heading: "How to reach us",
         body: [
-          "Email hello@tinvo.store with your order number and a line about what is wrong. A person reads it. There is no form and no ticket queue.",
+          "Email starshift07@gmail.com with your order number and a line about what is wrong. A person reads it. There is no form and no ticket queue.",
         ],
       },
     ],
@@ -268,7 +268,7 @@ export const supportPages: SupportPage[] = [
       {
         heading: "How to enquire",
         body: [
-          "Write to studio@tinvo.store with the quantity, the date you need them by and what the branding has to do. You get a real quote with a real lead time, usually within two working days.",
+          "Write to starshift07@gmail.com with the quantity, the date you need them by and what the branding has to do. You get a real quote with a real lead time, usually within two working days.",
         ],
       },
     ],
@@ -310,8 +310,8 @@ export const supportPages: SupportPage[] = [
         heading: "Ordering",
         qa: [
           {
-            q: "Can I buy one yet?",
-            a: "Not quite. Checkout is not live while we finish the first production run, and the catalogue, prices and specifications on the site stay provisional until it is.",
+            q: "How do I order?",
+            a: "Pick a design, add it to your cart (or tap Buy now) and pay securely through PayU with UPI, a card or netbanking. You get an email confirmation straight away, and another with tracking when it ships. Each tumbler is printed after you order.",
           },
           {
             q: "Can I personalise a design?",
@@ -336,7 +336,7 @@ export const supportPages: SupportPage[] = [
           },
           {
             q: "What if my product arrives damaged?",
-            a: "Email hello@tinvo.store within 7 days with your unboxing video, photos of the damage and photos of the original packaging. If the parcel itself was damaged, photograph the courier cover too, and note the damage on the courier's sheet before you sign.",
+            a: "Email starshift07@gmail.com within 7 days with your unboxing video, photos of the damage and photos of the original packaging. If the parcel itself was damaged, photograph the courier cover too, and note the damage on the courier's sheet before you sign.",
           },
           {
             q: "What if the printed design is defective?",

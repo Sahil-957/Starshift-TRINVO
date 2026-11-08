@@ -9,12 +9,12 @@ export const metadata: Metadata = {
 const routes = [
   {
     label: "General & orders",
-    value: "hello@tinvo.store",
+    value: "starshift07@gmail.com",
     note: "Anything about the range, sizing or shipping.",
   },
   {
     label: "Bulk & corporate",
-    value: "studio@tinvo.store",
+    value: "starshift07@gmail.com",
     note: "Team gifting and larger orders from the existing range.",
   },
 ];
@@ -26,7 +26,7 @@ export default function ContactPage() {
         index="01"
         label="Contact"
         title="Talk to a person"
-        lede="The store is not live yet, so the fastest route is still email. We read everything."
+        lede="Questions about an order, a design or a bulk quote? Email us. A person reads every message, and we reply from the same inbox your order emails come from."
       />
 
       <section className="mx-auto max-w-[1500px] px-5 pb-24 sm:px-8 lg:pb-32">
@@ -46,11 +46,6 @@ export default function ContactPage() {
             </li>
           ))}
         </ul>
-
-        <p className="mt-10 max-w-xl text-[13px] leading-relaxed text-dim">
-          Addresses above are placeholders for the storefront build — swap them
-          for the live inboxes before launch.
-        </p>
       </section>
     </>
   );

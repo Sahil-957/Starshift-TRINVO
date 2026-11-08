@@ -52,7 +52,7 @@ export default function Hero() {
       <div aria-hidden="true" className="keylight pointer-events-none absolute inset-0 transition-[background] duration-700" />
 
 
-      <div className="relative z-[3] mx-auto grid max-w-[1500px] items-center gap-8 px-5 pb-14 pt-6 sm:px-8 lg:min-h-[calc(100svh-6rem)] lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-6 lg:py-10">
+      <div className="relative z-[3] mx-auto grid max-w-[1500px] grid-cols-1 items-center gap-8 px-5 pb-14 pt-6 sm:px-8 lg:min-h-[calc(100svh-6rem)] lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-6 lg:py-10">
         <div className="order-2 lg:order-1">
           <p className="label animate-sweep text-ash">
             {products.length} designs · one {barrel.capacity} barrel

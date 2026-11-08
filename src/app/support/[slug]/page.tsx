@@ -44,8 +44,8 @@ export default async function SupportDetailPage({
             style={{ borderColor: page.accent }}
           >
             Figures on this page are provisional. Delivery windows, charges and
-            lead times are confirmed once our courier and production contracts
-            are signed, and ordering is not open yet.
+            lead times may change as we confirm them with our printing and
+            courier partners.
           </p>
         )}
 

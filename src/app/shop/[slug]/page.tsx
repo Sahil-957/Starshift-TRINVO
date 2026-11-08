@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import AddToCart from "@/components/AddToCart";
+import AddToCart, { BuyNowButton } from "@/components/AddToCart";
 import DesignPicker from "@/components/DesignPicker";
 import { checkoutEnabled } from "@/lib/admin-api";
 import ProductGallery from "@/components/ProductGallery";
@@ -98,7 +98,7 @@ export default async function ProductPage({ params }: PageProps<"/shop/[slug]">)
             <DesignPicker current={product} />
           </div>
 
-          <div className="mt-9 grid items-start gap-3 sm:grid-cols-[1fr_auto]">
+          <div className="mt-9 grid gap-4">
             {checkoutEnabled ? (
               <AddToCart slug={product.slug} accent={product.accent} />
             ) : (
@@ -108,9 +108,9 @@ export default async function ProductPage({ params }: PageProps<"/shop/[slug]">)
             )}
             <Link
               href={`/contact?design=${product.slug}`}
-              className="label border hairline px-8 py-4 text-center text-chalk transition-colors hover:bg-chalk hover:text-void"
+              className="wipe label justify-self-start text-ash hover:text-chalk"
             >
-              Ask about this design
+              Questions? Ask about this design →
             </Link>
           </div>
 
@@ -198,14 +198,14 @@ export default async function ProductPage({ params }: PageProps<"/shop/[slug]">)
       </div>
 
       {/* mobile: price and next step stay in reach while scrolling */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t hairline bg-void/90 backdrop-blur lg:hidden">
+      <div data-sticky-buy className="fixed inset-x-0 bottom-0 z-40 border-t hairline bg-void/90 backdrop-blur lg:hidden">
         <div className="flex items-center justify-between gap-4 px-5 py-3">
           <div className="min-w-0">
             <p className="truncate text-[14px] text-chalk">{product.name}</p>
             <p className="font-mono text-[13px] tabular-nums text-ash">{formatPrice(product.price)}</p>
           </div>
           {checkoutEnabled ? (
-            <AddToCart slug={product.slug} accent={product.accent} className="shrink-0" />
+            <BuyNowButton slug={product.slug} accent={product.accent} />
           ) : (
             <Link
               href={`/contact?design=${product.slug}`}

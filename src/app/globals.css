@@ -193,3 +193,10 @@ body {
     scroll-padding-inline: max(2rem, calc((100vw - 1500px) / 2 + 2rem));
   }
 }
+
+/* product pages: keep the footer clear of the phone's sticky Buy now bar */
+@media (max-width: 1023px) {
+  body:has([data-sticky-buy]) footer {
+    padding-bottom: 5.5rem;
+  }
+}
