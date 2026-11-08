@@ -47,6 +47,14 @@ export default function Hero() {
     setActive(i);
   };
 
+  /** Dragging a tumbler picture (e.g. into a new tab) carries its product page, not the image file. */
+  const dragAsLink = (slug: string) => (event: React.DragEvent) => {
+    const url = `${location.origin}/shop/${slug}`;
+    event.dataTransfer.clearData();
+    event.dataTransfer.setData("text/uri-list", url);
+    event.dataTransfer.setData("text/plain", url);
+  };
+
   /** Swipe the tumbler left/right for the next/previous design. */
   const swipeStart = useRef<{ x: number; y: number } | null>(null);
   const swipeEnd = (event: React.TouchEvent) => {
@@ -122,6 +130,7 @@ export default function Hero() {
 
         <figure className="order-2 mx-auto w-full max-w-[26rem] lg:order-2 lg:w-auto lg:max-w-none lg:pr-36">
           <div
+            onDragStart={dragAsLink(lead.slug)}
             onTouchStart={(e) => (swipeStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY })}
             onTouchEnd={swipeEnd}
             className="relative mx-auto aspect-[4/5] w-full touch-pan-y lg:h-[clamp(26rem,calc(100svh-9rem),50rem)] lg:w-auto"
@@ -250,6 +259,7 @@ export default function Hero() {
                 aria-label={p.name}
                 title={p.name}
                 onClick={() => pick(i)}
+                onDragStart={dragAsLink(p.slug)}
                 className={`relative h-[4.5rem] w-11 shrink-0 snap-start overflow-hidden border transition-[opacity,transform,border-color] duration-500 ${
                   i === active ? "-translate-y-1 border-chalk/60 opacity-100" : "border-transparent opacity-50 hover:opacity-90"
                 }`}
