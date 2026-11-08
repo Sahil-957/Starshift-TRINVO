@@ -428,8 +428,49 @@ def main():
                 rig.rotation_euler = (0, 0, front + 2 * math.pi * i / frames)
                 shoot(out / "spin" / f"{slug}-{i:02d}.webp", int(560 * scale), int(700 * scale), q(12))
 
+    if "mask" in shots:
+        masks(rig, slugs, hero_cam, out, scale)
     if "lineup" in shots and not only:
         lineup(rig, tex, glow, out, scale, q)
+
+
+def masks(rig, slugs, cam, out, scale):
+    """The tumbler's silhouette for each hero shot (white on transparent, same camera
+    and angle), so the website can layer text between the backdrop and the tumbler."""
+    sc = bpy.context.scene
+    keep = {rig, *rig.children}
+    hidden = [o for o in sc.objects if o not in keep and not o.hide_render]
+    for o in hidden:
+        o.hide_render = True
+    white = bpy.data.materials.new("MaskWhite")
+    white.use_nodes = True
+    nodes = white.node_tree.nodes
+    nodes.clear()
+    em = nodes.new("ShaderNodeEmission")
+    em.inputs["Color"].default_value = (1, 1, 1, 1)
+    outn = nodes.new("ShaderNodeOutputMaterial")
+    white.node_tree.links.new(em.outputs[0], outn.inputs[0])
+    vl = bpy.context.view_layer
+    vl.material_override = white
+    sc.render.film_transparent = True
+    sc.cycles.use_denoising = False
+    sc.camera = cam
+    (out / "mask").mkdir(parents=True, exist_ok=True)
+    for slug in slugs:
+        wrap, u0, tone = DESIGNS[slug]
+        rig.rotation_euler = (0, 0, -2 * math.pi * u0)
+        sc.render.resolution_x, sc.render.resolution_y = int(540 * scale), int(675 * scale)
+        sc.render.resolution_percentage = 100
+        sc.cycles.samples = 16
+        sc.render.image_settings.file_format = "PNG"
+        sc.render.image_settings.color_mode = "RGBA"
+        sc.render.filepath = str(out / "mask" / f"{slug}.png")
+        bpy.ops.render.render(write_still=True)
+        print(f"  mask/{slug}.png", flush=True)
+    vl.material_override = None
+    sc.render.film_transparent = False
+    for o in hidden:
+        o.hide_render = False
 
 
 def lineup(rig, tex, glow, out, scale, q):

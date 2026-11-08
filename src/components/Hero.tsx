@@ -13,6 +13,11 @@ const callouts = [
   { y: 83, x: 63, title: "304 stainless steel", body: `Double-wall · ${barrel.capacity}` },
 ];
 
+/** inactive designs sit slightly lower and smaller, so the swap feels like a lift */
+const swap = "translateY(14px) scale(0.98)";
+
+const edges = "linear-gradient(to right, transparent, #000 18%, #000 82%, transparent)";
+
 const mask =
   "linear-gradient(to right, transparent, #000 22%, #000 78%, transparent), linear-gradient(to bottom, transparent, #000 8%, #000 92%, transparent)";
 
@@ -53,7 +58,9 @@ export default function Hero() {
 
 
       <div className="relative z-[3] mx-auto grid max-w-[1500px] grid-cols-1 items-center gap-8 px-5 pb-14 pt-6 sm:px-8 lg:min-h-[calc(100svh-6rem)] lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-6 lg:py-10">
-        <div className="order-2 lg:order-1">
+        {/* phones: headline, then the tumbler, then the pitch; desktop: text left, tumbler right */}
+        <div className="contents lg:order-1 lg:block">
+          <div className="order-1">
           <p className="label animate-sweep text-ash">
             {products.length} designs · one {barrel.capacity} barrel
           </p>
@@ -66,7 +73,9 @@ export default function Hero() {
               your style.
             </span>
           </h1>
+          </div>
 
+          <div className="order-3">
           <p className="mt-7 max-w-md text-[16px] leading-relaxed text-ash">
             304 stainless, double-wall insulated, a splash-proof lid and a metal
             straw in the box, with the design printed edge to edge. Not just
@@ -96,30 +105,19 @@ export default function Hero() {
               </li>
             ))}
           </ul>
+          </div>
         </div>
 
-        <figure className="order-1 mx-auto w-full max-w-[26rem] lg:order-2 lg:w-auto lg:max-w-none lg:pr-36">
+        <figure className="order-2 mx-auto w-full max-w-[26rem] lg:order-2 lg:w-auto lg:max-w-none lg:pr-36">
           <div className="relative mx-auto aspect-[4/5] w-full lg:h-[min(calc(100svh-20rem),48rem)] lg:w-auto">
-            {/* the design's name, huge and hollow, behind everything */}
-            <p
-              key={lead.slug}
-              aria-hidden="true"
-              className="display pointer-events-none absolute left-1/2 top-[52%] -translate-x-1/2 -translate-y-1/2 whitespace-nowrap animate-sweep select-none text-center text-[clamp(4.5rem,9vw,9.5rem)] leading-[0.82] text-transparent"
-              style={{ WebkitTextStroke: `1px color-mix(in oklab, ${lead.tone} 24%, transparent)` }}
-            >
-              {lead.name.split(" ").map((w) => (
-                <span key={w} className="block">
-                  {w}
-                </span>
-              ))}
-            </p>
             {/* colour bloom behind the barrel */}
             <div
               aria-hidden="true"
-              className="absolute left-1/2 top-[55%] h-[55%] w-[45%] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-30 blur-3xl transition-[background-color] duration-700"
+              className="absolute left-1/2 top-[52%] h-[75%] w-[80%] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-40 blur-[90px] transition-[background-color] duration-700"
               style={{ backgroundColor: lead.tone }}
             />
 
+            {/* 1. the studio shot as a backdrop, blended into the page */}
             <div className="absolute inset-0 mix-blend-screen" style={{ maskImage: mask, WebkitMaskImage: mask, maskComposite: "intersect", WebkitMaskComposite: "source-in" }}>
               {products.map((p, i) => (
                 <Image
@@ -130,12 +128,68 @@ export default function Hero() {
                   priority={i === 0}
                   sizes="(max-width: 1024px) 26rem, 40rem"
                   className="object-cover transition-[opacity,transform] duration-[900ms] ease-out"
-                  style={{
-                    opacity: i === active ? 1 : 0,
-                    transform: i === active ? "none" : "translateY(14px) scale(0.98)",
-                  }}
+                  style={{ opacity: i === active ? 1 : 0, transform: i === active ? "none" : swap }}
                 />
               ))}
+            </div>
+
+            {/* 2. the design's name, two rows drifting opposite ways over the backdrop,
+                nudged against the cursor for depth… */}
+            <div
+              key={lead.slug}
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-x-[-12%] top-1/2 animate-sweep select-none lg:inset-x-[-30%]"
+              style={{
+                maskImage: edges,
+                WebkitMaskImage: edges,
+                translate: "calc((var(--kx) - 50%) * -0.06) calc(-50% + (var(--ky) - 35%) * -0.06)",
+                transition: "translate 700ms ease-out",
+              }}
+            >
+              {[0, 1].map((row) => (
+                <div
+                  key={row}
+                  className="display flex w-max animate-drift whitespace-nowrap text-[clamp(4.25rem,9vw,9.5rem)] leading-[0.95]"
+                  style={{
+                    animationDuration: "48s",
+                    animationDirection: row ? "reverse" : "normal",
+                    color: row ? "transparent" : `color-mix(in oklab, ${lead.tone} 28%, transparent)`,
+                    WebkitTextStroke: `1px color-mix(in oklab, ${lead.tone} ${row ? 55 : 70}%, transparent)`,
+                  }}
+                >
+                  {Array.from({ length: 8 }, (_, i) => (
+                    <span key={i} className="pr-[0.35em]">
+                      {lead.name} <span className="opacity-60">✦</span>
+                    </span>
+                  ))}
+                </div>
+              ))}
+            </div>
+
+            {/* 3. …and the tumbler itself on top, cut out by its rendered silhouette
+                (public/products/mask, from scripts/studio.py --shots mask) */}
+            <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+              {products.map((p, i) => {
+                const silhouette = `url(/products/mask/${p.slug}.png)`;
+                return (
+                  <Image
+                    key={p.slug}
+                    src={`/products/${p.images[0].file}`}
+                    alt=""
+                    fill
+                    sizes="(max-width: 1024px) 26rem, 40rem"
+                    className="object-cover transition-[opacity,transform] duration-[900ms] ease-out"
+                    style={{
+                      opacity: i === active ? 1 : 0,
+                      transform: i === active ? "none" : swap,
+                      maskImage: silhouette,
+                      WebkitMaskImage: silhouette,
+                      maskSize: "100% 100%",
+                      WebkitMaskSize: "100% 100%",
+                    }}
+                  />
+                );
+              })}
             </div>
 
             {/* parts, called out on the product itself */}
