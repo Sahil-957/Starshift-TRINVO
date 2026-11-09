@@ -15,7 +15,7 @@ export default async function AccountOrder({ params }: PageProps<"/account/order
   try {
     const r = await accountCall("order", { number: decodeURIComponent(number).slice(0, 20) });
     order = r.data.order ?? null;
-    signedIn = r.ok;
+    signedIn = r.ok && r.data.signedIn === true;
   } catch {
     signedIn = false;
   }

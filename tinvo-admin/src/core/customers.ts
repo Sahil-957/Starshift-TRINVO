@@ -314,7 +314,8 @@ export const account = (shopId: string, session: string) =>
 export const accountOrder = (shopId: string, session: string, number: string) =>
   withShop(shopId, async (tx) => {
     const h = await holder(tx, shopId, session, "session");
-    if (!h?.customer.emailVerifiedAt) return { order: null };
+    if (!h) return { order: null, signedIn: false };
+    if (!h.customer.emailVerifiedAt) return { order: null, signedIn: true };
     const [o] = await tx
       .select()
       .from(orders)
@@ -326,5 +327,5 @@ export const accountOrder = (shopId: string, session: string, number: string) =>
           ne(orders.status, "pending_payment"),
         ),
       );
-    return { order: o ? await customerOrderView(tx, o, true) : null };
+    return { order: o ? await customerOrderView(tx, o, true) : null, signedIn: true };
   });

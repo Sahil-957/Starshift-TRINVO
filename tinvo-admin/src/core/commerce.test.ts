@@ -411,6 +411,7 @@ describe("customer accounts", () => {
     const detail = (await accountOrder(shopId, session, me.orders![0].number.toLowerCase())).order!;
     assert.equal(detail.shipTo.lines[0], address.line1, "the confirmed owner sees the full address");
     assert.equal((await accountOrder(shopId, session, "TST-9999")).order, null);
+    assert.deepEqual(await accountOrder(shopId, "made-up-token-made-up-token", "TST-1001"), { order: null, signedIn: false });
     assert.ok(me.orders![0].items.length >= 1);
 
     assert.ok(mails.some((m) => m.to === customer.email && /^Welcome/.test(m.subject)), "welcome email on first confirm");
