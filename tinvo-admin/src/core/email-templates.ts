@@ -116,6 +116,58 @@ ${o.trackUrl ? button(o.trackUrl, "Track your order") : ""}
   return { subject: `Your ${o.shop} order ${o.number} is confirmed`, html, text };
 }
 
+/** Account emails: confirm-your-email and reset-your-password, one button each. */
+export function accountLink(o: {
+  shop: string;
+  domain: string | null;
+  subject: string;
+  title: string;
+  intro: string;
+  button: string;
+  url: string;
+  note: string;
+}): Email {
+  const html = layout({
+    preheader: o.intro,
+    eyebrow: "Your account",
+    body: `${h1(esc(o.title))}
+${p(esc(o.intro))}
+${button(o.url, o.button)}
+<p style="margin:16px 0 0;font-size:12px;line-height:1.6;color:${muted};word-break:break-all;">Or paste this into your browser: ${esc(o.url)}</p>
+${p(`<span style="font-size:13px;color:${muted};">${esc(o.note)}</span>`)}`,
+    footer: customerFooter(o.shop, o.domain),
+  });
+  const text = `${o.title}\n\n${o.intro}\n\n${o.url}\n\n${o.note}\n— ${o.shop}`;
+  return { subject: o.subject, html, text };
+}
+
+/** "Email me my orders": every order on an email address, each with its tracking link. */
+export function orderList(o: {
+  shop: string;
+  domain: string | null;
+  orders: { number: string; date: string; status: string; total: string; url: string | null }[];
+}): Email {
+  const rows = o.orders
+    .map(
+      (r) => `<tr><td style="padding:12px 0;border-bottom:1px solid ${line};font-size:14px;"><strong>${esc(r.number)}</strong><br><span style="color:${muted};">${esc(r.date)} &middot; ${esc(r.status)} &middot; ${esc(r.total)}</span></td>
+<td align="right" style="padding:12px 0;border-bottom:1px solid ${line};font-size:14px;">${r.url ? `<a href="${esc(r.url)}" style="color:${ink};font-weight:600;">Track &rarr;</a>` : ""}</td></tr>`,
+    )
+    .join("");
+  const html = layout({
+    preheader: `Your ${o.orders.length} ${o.shop} order${o.orders.length === 1 ? "" : "s"}, with tracking links.`,
+    eyebrow: "Your orders",
+    body: `${h1("Your orders")}
+${p("You asked for a list of your orders. Tap any one to see where it is.")}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${rows}</table>
+${p(`<span style="font-size:13px;color:${muted};">Didn't ask for this? You can ignore it; nothing has changed.</span>`)}`,
+    footer: customerFooter(o.shop, o.domain),
+  });
+  const text = `Your ${o.shop} orders:\n\n${o.orders
+    .map((r) => `${r.number} · ${r.date} · ${r.status} · ${r.total}${r.url ? `\n  ${r.url}` : ""}`)
+    .join("\n\n")}\n\nDidn't ask for this? You can ignore it.\n— ${o.shop}`;
+  return { subject: `Your ${o.shop} orders`, html, text };
+}
+
 export function orderShipped(o: {
   shop: string;
   domain: string | null;

@@ -3,12 +3,12 @@
  * designed in email-templates.ts. Never throws: a mail problem is logged and must
  * not break payment or fulfilment.
  */
-import { eq } from "drizzle-orm";
+import { and, desc, eq, ne, sql } from "drizzle-orm";
 import { db, withShop } from "../db/index.ts";
 import { orderItems, orders, shops } from "../db/schema.ts";
 import { formatMinor, STATES } from "../lib/india.ts";
 import { sendMail } from "../lib/mail.ts";
-import { orderConfirmed, orderShipped, ownerAlert, ownerNewOrder, type Email } from "./email-templates.ts";
+import { orderConfirmed, orderList, orderShipped, ownerAlert, ownerNewOrder, type Email } from "./email-templates.ts";
 
 const owner = () => process.env.ALERT_EMAIL || process.env.SMTP_USER || "";
 const adminLink = (shopId: string, orderId?: string) =>
@@ -136,3 +136,46 @@ export const notifySyncFailing = (shopId: string, error: string) =>
       `${shop.name} alerts`,
     );
   });
+
+const STATUS: Record<string, string> = {
+  paid: "Paid",
+  in_production: "Printing",
+  shipped: "Shipped",
+  delivered: "Delivered",
+  cancelled: "Cancelled",
+  refunded: "Refunded",
+  returned: "Returned",
+};
+
+/**
+ * "Email me my orders": sends every paid order on that address to that address,
+ * so only whoever reads the inbox sees them. Sends nothing when there are none.
+ */
+export async function emailOrderList(shopId: string, email: string) {
+  const addr = email.trim().toLowerCase();
+  const [shop] = await db.select().from(shops).where(eq(shops.id, shopId));
+  const list = await withShop(shopId, (tx) =>
+    tx
+      .select()
+      .from(orders)
+      .where(and(eq(orders.shopId, shopId), eq(sql`lower(${orders.email})`, addr), ne(orders.status, "pending_payment")))
+      .orderBy(desc(orders.createdAt))
+      .limit(50),
+  );
+  if (!list.length) return 0;
+  const e = orderList({
+    shop: shop.name,
+    domain: shop.primaryDomain,
+    orders: list.map((o) => ({
+      number: o.number,
+      date: o.createdAt.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Kolkata" }),
+      status: STATUS[o.status] ?? o.status,
+      total: formatMinor(o.totalMinor, o.currency),
+      url: shop.primaryDomain
+        ? `https://${shop.primaryDomain}/order?number=${encodeURIComponent(o.number)}&email=${encodeURIComponent(o.email)}`
+        : null,
+    })),
+  });
+  await send(list[0].email, e, shop.name);
+  return list.length;
+}

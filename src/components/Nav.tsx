@@ -17,6 +17,7 @@ const links = [
 
 export default function Nav({ checkout = false }: { checkout?: boolean }) {
   const [open, setOpen] = useState(false);
+  const items = checkout ? [...links, { href: "/account", label: "My account" }] : links;
   const [solid, setSolid] = useState(false);
 
   useEffect(() => {
@@ -58,7 +59,7 @@ export default function Nav({ checkout = false }: { checkout?: boolean }) {
           </span>
         </Link>
 
-        <ul className="hidden items-center gap-6 lg:flex xl:gap-8">
+        <ul className="hidden items-center gap-5 whitespace-nowrap lg:flex xl:gap-8">
           {links.map((link) => (
             <li key={link.href}>
               <Link href={link.href} className="wipe label text-ash hover:text-chalk">
@@ -69,6 +70,11 @@ export default function Nav({ checkout = false }: { checkout?: boolean }) {
         </ul>
 
         <div className="flex items-center gap-3">
+          {checkout && (
+            <Link href="/account" className="label hidden border hairline px-4 py-3 text-chalk transition-colors hover:bg-chalk hover:text-void lg:block">
+              Account
+            </Link>
+          )}
           {checkout && <CartLink />}
           <Link
             href="/shop"
@@ -106,7 +112,7 @@ export default function Nav({ checkout = false }: { checkout?: boolean }) {
         className="border-t hairline bg-void px-5 pb-10 pt-4 lg:hidden"
       >
         <ul>
-          {[...links, { href: "/contact", label: "Contact" }].map((link, i) => (
+          {[...items, { href: "/contact", label: "Contact" }].map((link, i) => (
             <li key={link.href} className="border-b hairline">
               <Link
                 href={link.href}

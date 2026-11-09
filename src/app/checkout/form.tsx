@@ -33,7 +33,9 @@ function F({ label, children, wide }: { label: string; children: React.ReactNode
   );
 }
 
-export default function CheckoutForm({ returnError }: { returnError?: string }) {
+type Prefill = Record<"name" | "email" | "phone" | "line1" | "line2" | "city" | "state" | "pin", string>;
+
+export default function CheckoutForm({ returnError, prefill }: { returnError?: string; prefill?: Prefill }) {
   const lines = useCartLines();
   const [error, setError] = useState<string | null>(returnError ?? null);
   const [busy, setBusy] = useState(false);
@@ -81,28 +83,28 @@ export default function CheckoutForm({ returnError }: { returnError?: string }) 
     <div className="mt-10 grid gap-12 lg:grid-cols-[1fr_22rem]">
       <form onSubmit={submit} className="grid content-start gap-5 sm:grid-cols-2">
         <F label="Full name" wide>
-          <input name="name" required autoComplete="name" className={input} />
+          <input name="name" defaultValue={prefill?.name} required autoComplete="name" className={input} />
         </F>
         <F label="Email">
-          <input name="email" type="email" required autoComplete="email" className={input} />
+          <input name="email" defaultValue={prefill?.email} type="email" required autoComplete="email" className={input} />
         </F>
         <F label="Mobile">
-          <input name="phone" type="tel" required autoComplete="tel" inputMode="tel" placeholder="98765 43210" className={input} />
+          <input name="phone" defaultValue={prefill?.phone} type="tel" required autoComplete="tel" inputMode="tel" placeholder="98765 43210" className={input} />
         </F>
         <F label="Address" wide>
-          <input name="line1" required maxLength={90} autoComplete="address-line1" placeholder="House, street" className={input} />
+          <input name="line1" defaultValue={prefill?.line1} required maxLength={90} autoComplete="address-line1" placeholder="House, street" className={input} />
         </F>
         <F label="Area / landmark (optional)" wide>
-          <input name="line2" maxLength={90} autoComplete="address-line2" className={input} />
+          <input name="line2" defaultValue={prefill?.line2} maxLength={90} autoComplete="address-line2" className={input} />
         </F>
         <F label="City">
-          <input name="city" required autoComplete="address-level2" className={input} />
+          <input name="city" defaultValue={prefill?.city} required autoComplete="address-level2" className={input} />
         </F>
         <F label="PIN code">
-          <input name="pin" required inputMode="numeric" pattern="[1-9][0-9]{5}" maxLength={6} autoComplete="postal-code" className={input} />
+          <input name="pin" defaultValue={prefill?.pin} required inputMode="numeric" pattern="[1-9][0-9]{5}" maxLength={6} autoComplete="postal-code" className={input} />
         </F>
         <F label="State" wide>
-          <select name="state" required defaultValue="" autoComplete="address-level1" className={`${input} bg-void`}>
+          <select name="state" required defaultValue={prefill?.state ?? ""} autoComplete="address-level1" className={`${input} bg-void`}>
             <option value="" disabled>
               Choose your state
             </option>

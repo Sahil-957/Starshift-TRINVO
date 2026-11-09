@@ -367,3 +367,40 @@ export const subscribers = pgTable(
   },
   (t) => [uniqueIndex("subscribers_shop_email_key").on(t.shopId, t.email)],
 );
+
+// ─── storefront customer accounts ───────────────────────────────────────────
+
+/**
+ * A shopper's account on one shop's storefront (not an admin user). Orders are
+ * linked by email, so an account only shows orders once its email is verified.
+ */
+export const customers = pgTable(
+  "customers",
+  {
+    id: id(),
+    shopId: uuid("shop_id").notNull().references(() => shops.id, { onDelete: "restrict" }),
+    email: text("email").notNull(), // stored lower-cased
+    name: text("name").notNull(),
+    passwordHash: text("password_hash").notNull(),
+    emailVerifiedAt: timestamp("email_verified_at", { withTimezone: true }),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex("customers_shop_email_key").on(t.shopId, t.email)],
+);
+
+export const customerTokenKind = pgEnum("customer_token_kind", ["session", "verify", "reset"]);
+
+/** Sign-in sessions and one-time email links. Only a SHA-256 of each token is stored. */
+export const customerTokens = pgTable(
+  "customer_tokens",
+  {
+    id: id(),
+    shopId: uuid("shop_id").notNull().references(() => shops.id, { onDelete: "restrict" }),
+    customerId: uuid("customer_id").notNull().references(() => customers.id, { onDelete: "cascade" }),
+    kind: customerTokenKind("kind").notNull(),
+    tokenHash: char("token_hash", { length: 64 }).notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex("customer_tokens_hash_key").on(t.tokenHash), index("customer_tokens_customer_idx").on(t.customerId, t.kind)],
+);

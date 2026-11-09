@@ -17,6 +17,7 @@ import { orderEvents, orders } from "../db/schema.ts";
 import { envCreds } from "../lib/qikink.ts";
 import { putFile } from "../lib/storage.ts";
 import { createApiKey, listApiKeys, revokeApiKey, shopForToken } from "./apikeys.ts";
+import { account, changePassword, requestReset, resendVerify, resetPassword, signIn, signOut, signUp, verifyEmail } from "./customers.ts";
 import { createProduct, lastProductEdit, listProducts, quickEdit, storefrontProducts } from "./catalogue.ts";
 import { setCredentials } from "./credentials.ts";
 import {
@@ -35,6 +36,7 @@ import {
   refundOrder,
   syncShop,
 } from "./orders.ts";
+import { emailOrderList } from "./notify.ts";
 import { shopReport } from "./reports.ts";
 import { listSubscribers, subscribe, unsubscribe } from "./subscribers.ts";
 import { listReviews, pendingReviewCount, publicName, publishedReviews, setReviewStatus, submitReview } from "./reviews.ts";
@@ -134,10 +136,10 @@ after(async () => {
   const c = new pg.Client({ connectionString: process.env.DATABASE_URL_UNPOOLED!.replace("sslmode=require", "sslmode=verify-full") });
   await c.connect();
   const inOrg = "(select id from shops where org_id = $1)";
-  for (const t of ["reviews", "order_events", "order_tax_lines", "order_items", "refunds", "webhook_events"]) {
+  for (const t of ["customer_tokens", "reviews", "order_events", "order_tax_lines", "order_items", "refunds", "webhook_events"]) {
     await c.query(`delete from ${t} where shop_id in ${inOrg}`, [orgId]);
   }
-  for (const t of ["orders", "products", "shop_credentials", "shop_settings", "api_keys", "shop_members", "subscribers"]) {
+  for (const t of ["orders", "products", "shop_credentials", "shop_settings", "api_keys", "shop_members", "subscribers", "customers"]) {
     await c.query(`delete from ${t} where shop_id in ${inOrg}`, [orgId]);
   }
   await c.query("delete from audit_logs where org_id = $1", [orgId]);
@@ -360,6 +362,72 @@ describe("drop list", () => {
     assert.equal((await listSubscribers(bareShopId)).length, 0, "other shops see nothing");
     await unsubscribe(shopId, list[0].id);
     assert.equal((await listSubscribers(shopId)).length, 0);
+  });
+});
+
+describe("email my orders", () => {
+  it("lists only paid orders on that address, case-insensitively", async () => {
+    assert.ok((await emailOrderList(shopId, ` ${customer.email.toUpperCase()} `)) >= 1);
+    assert.equal(await emailOrderList(shopId, "nobody@test.invalid"), 0);
+    assert.equal(await emailOrderList(bareShopId, customer.email), 0, "other shops see nothing");
+  });
+});
+
+describe("customer accounts", () => {
+  const linkIn = (kind: string) => {
+    const m = [...mails].reverse().find((x) => x.text.includes(`/account/${kind}?token=`))!;
+    return m.text.match(/token=([\w-]+)/)![1];
+  };
+  const pw = "a-strong-password";
+
+  before(() => updateShopDetails(owner, shopId, { name: "Shop", gstin: "27ABCDE1234F1Z5", originState: "MH", orderPrefix: "TST", primaryDomain: "shop.example" }));
+
+  it("shows orders only after the email is confirmed", async () => {
+    const { session } = await signUp(shopId, { name: "Test Buyer", email: ` ${customer.email.toUpperCase()} `, password: pw });
+    let me = await account(shopId, session);
+    assert.deepEqual(me.customer, { name: "Test Buyer", email: customer.email, verified: false });
+    assert.equal(me.orders!.length, 0, "unconfirmed: someone could have typed another person's email");
+
+    await resendVerify(shopId, session);
+    assert.equal((await verifyEmail(shopId, linkIn("verify"))).ok, true);
+    assert.equal((await verifyEmail(shopId, linkIn("verify"))).ok, true, "a mail scanner opening it first doesn't use it up");
+    assert.equal((await verifyEmail(shopId, "made-up-token-made-up-token")).ok, false);
+    me = await account(shopId, session);
+    assert.equal(me.customer!.verified, true);
+    assert.ok(me.orders!.length >= 1 && me.orders!.every((o) => o.status !== "pending_payment"));
+    assert.equal(me.lastAddress!.pin, address.pin);
+    assert.ok(me.orders![0].items.length >= 1);
+
+    await assert.rejects(signUp(shopId, { name: "X", email: customer.email, password: pw }), /already an account/);
+  });
+
+  it("signs in and out, and rejects wrong passwords and fake sessions", async () => {
+    await assert.rejects(signIn(shopId, { email: customer.email, password: "wrong-password" }), /don't match/);
+    await assert.rejects(signIn(shopId, { email: "nobody@test.invalid", password: pw }), /don't match/);
+    const { session } = await signIn(shopId, { email: customer.email, password: pw });
+    assert.ok((await account(shopId, session)).customer);
+    assert.equal((await account(bareShopId, session)).customer, null, "a session belongs to one shop");
+    await signOut(shopId, session);
+    assert.equal((await account(shopId, session)).customer, null);
+    assert.equal((await account(shopId, "made-up-token-made-up-token")).customer, null);
+  });
+
+  it("resets a forgotten password once, signing out every other device", async () => {
+    const before = (await signIn(shopId, { email: customer.email, password: pw })).session;
+    await requestReset(shopId, { email: "nobody@test.invalid" }); // same answer, no email
+    await requestReset(shopId, { email: customer.email });
+    const t = linkIn("reset");
+    const { session } = await resetPassword(shopId, { token: t, password: "another-password" });
+    await assert.rejects(resetPassword(shopId, { token: t, password: "third-password" }), /expired or was already used/);
+    assert.equal((await account(shopId, before)).customer, null, "old devices are signed out");
+    assert.ok((await account(shopId, session)).customer);
+    await assert.rejects(signIn(shopId, { email: customer.email, password: pw }));
+
+    await assert.rejects(changePassword(shopId, { session, current: "wrong", password: "fourth-password" }), /current password/);
+    const next = await changePassword(shopId, { session, current: "another-password", password: "fourth-password" });
+    assert.equal((await account(shopId, session)).customer, null);
+    assert.ok((await account(shopId, next.session)).customer);
+    await assert.rejects(signUp(shopId, { name: "Y", email: `short-${run}@test.invalid`, password: "short" }), /8 characters/);
   });
 });
 

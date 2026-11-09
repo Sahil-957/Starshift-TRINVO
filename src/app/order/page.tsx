@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { adminFetch, checkoutEnabled } from "@/lib/admin-api";
 import ClearCart from "./clear-cart";
+import Link from "next/link";
+import { currentAccount } from "@/lib/account";
+import { EmailMyOrders } from "./email-orders";
 
 export const metadata: Metadata = { title: "Track your order", robots: { index: false } };
 
@@ -53,6 +56,7 @@ export default async function OrderPage({ searchParams }: PageProps<"/order">) {
       error = "We couldn't look that up right now. Please try again in a minute.";
     }
   }
+  const signedIn = order ? !!(await currentAccount()) : false;
   const reached = order ? steps.findIndex(([s]) => s === order.status) : -1;
 
   return (
@@ -127,6 +131,29 @@ export default async function OrderPage({ searchParams }: PageProps<"/order">) {
             Find my order
           </button>
         </form>
+      )}
+      {!order && <EmailMyOrders />}
+      {order && !signedIn && (
+        <section className="mt-12 border hairline p-6 sm:p-8">
+          <h2 className="text-[17px] text-chalk">All your orders in one place</h2>
+          <p className="mt-2 text-[14px] leading-relaxed text-ash">
+            Create an account with {email.trim().toLowerCase()} to see this order and every future one, and check out faster next time.
+          </p>
+          <Link
+            href={`/account/sign-up?email=${encodeURIComponent(email.trim())}`}
+            className="label mt-5 inline-block bg-chalk px-7 py-4 text-void transition-colors hover:bg-bronze"
+          >
+            Create an account
+          </Link>
+        </section>
+      )}
+      {!order && (
+        <p className="mt-10 text-[14px] text-ash">
+          Have an account?{" "}
+          <Link href="/account" className="text-chalk underline underline-offset-4">
+            See all your orders
+          </Link>
+        </p>
       )}
     </div>
   );
