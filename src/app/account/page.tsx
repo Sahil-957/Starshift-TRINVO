@@ -6,7 +6,7 @@ import { getProduct } from "@/data/products";
 import { checkoutEnabled } from "@/lib/admin-api";
 import { currentAccount } from "@/lib/account";
 import { changePasswordAction, resendVerifyAction, signOutAction } from "./actions";
-import { AccountForm, Field } from "./form";
+import { AccountForm, PasswordField } from "./form";
 
 export const metadata: Metadata = { title: "My account", robots: { index: false } };
 
@@ -124,11 +124,22 @@ export default async function AccountPage({ searchParams }: PageProps<"/account"
       )}
 
       <section className="mt-16 border-t hairline pt-10">
-        <h2 className="label text-ash">Change password</h2>
+        <h2 className="label text-ash">{customer.hasPassword ? "Change password" : "Add a password"}</h2>
+        {!customer.hasPassword && (
+          <p className="mt-3 max-w-md text-[14px] text-ash">You sign in with Google. Add a password to also sign in with your email.</p>
+        )}
         <div className="mt-6 max-w-sm">
-          <AccountForm action={changePasswordAction} submit="Change password" busy="Saving…" quiet>
-            <Field label="Current password" name="current" type="password" required autoComplete="current-password" />
-            <Field label="New password" name="password" type="password" required minLength={8} autoComplete="new-password" hint="At least 8 characters. Signs out your other devices." />
+          <AccountForm action={changePasswordAction} submit={customer.hasPassword ? "Change password" : "Add password"} busy="Saving…" quiet>
+            {customer.hasPassword && <PasswordField label="Current password" name="current" required autoComplete="current-password" />}
+            <PasswordField
+              label="New password"
+              name="password"
+              required
+              minLength={8}
+              autoComplete="new-password"
+              hint={customer.hasPassword ? "At least 8 characters. Signs out your other devices." : "At least 8 characters."}
+              meter
+            />
           </AccountForm>
         </div>
       </section>

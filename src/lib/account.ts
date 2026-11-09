@@ -18,7 +18,7 @@ export type AccountOrder = {
   items: { title: string; slug: string; quantity: number }[];
 };
 export type Account = {
-  customer: { name: string; email: string; verified: boolean };
+  customer: { name: string; email: string; verified: boolean; hasPassword: boolean };
   orders: AccountOrder[];
   lastAddress: { name: string; phone: string; line1: string; line2?: string; city: string; state: string; pin: string } | null;
 };

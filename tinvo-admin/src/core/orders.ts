@@ -31,7 +31,14 @@ import { priceOrder } from "./pricing.ts";
 import { notifyFulfilmentFailed, notifyPaid, notifyShipped, notifySyncFailing } from "./notify.ts";
 import { getCheckoutSettings, getShopState, setShopState } from "./settings.ts";
 
-export class CheckoutError extends Error {}
+/** A message for the shopper; `field` names the form field it belongs to, when there is one. */
+export class CheckoutError extends Error {
+  field?: string;
+  constructor(message: string, field?: string) {
+    super(message);
+    this.field = field;
+  }
+}
 
 const event = (tx: Tx, shopId: string, orderId: string, type: string, data?: unknown) =>
   tx.insert(orderEvents).values({ shopId, orderId, type, data: data ?? null });

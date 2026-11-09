@@ -14,8 +14,8 @@ export function storefront(fn: (shopId: string, req: Request) => Promise<unknown
     try {
       return Response.json(await fn(shopId, req));
     } catch (e) {
-      if (e instanceof ZodError) return Response.json({ error: e.issues[0].message, issues: e.issues }, { status: 400 });
-      if (e instanceof CheckoutError) return Response.json({ error: e.message }, { status: 400 });
+      if (e instanceof ZodError) return Response.json({ error: e.issues[0].message, field: e.issues[0].path[0], issues: e.issues }, { status: 400 });
+      if (e instanceof CheckoutError) return Response.json({ error: e.message, field: e.field }, { status: 400 });
       if (e instanceof Error && e.message.startsWith("PayU")) {
         console.error("storefront api: payment provider", e.message);
         return Response.json({ error: "Payments are temporarily unavailable. Please try again shortly." }, { status: 502 });

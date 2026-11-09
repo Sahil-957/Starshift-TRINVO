@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { checkoutEnabled } from "@/lib/admin-api";
 import { resetAction } from "../actions";
-import { AccountForm, Field } from "../form";
+import { AccountForm, PasswordField } from "../form";
 import Shell from "../shell";
 
 // no-referrer: the token in the address must not leak to other sites
@@ -25,7 +25,7 @@ export default async function Reset({ searchParams }: PageProps<"/account/reset"
     <Shell title="Choose a new password" lede="This also signs you out on every other device.">
       <AccountForm action={resetAction} submit="Save and sign in" busy="Saving…">
         <input type="hidden" name="token" value={token} />
-        <Field label="New password" name="password" type="password" required minLength={8} autoComplete="new-password" hint="At least 8 characters." />
+        <PasswordField label="New password" name="password" required minLength={8} autoComplete="new-password" hint="At least 8 characters." meter autoFocus />
       </AccountForm>
     </Shell>
   );

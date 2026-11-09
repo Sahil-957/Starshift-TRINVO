@@ -17,7 +17,7 @@ import { orderEvents, orders } from "../db/schema.ts";
 import { envCreds } from "../lib/qikink.ts";
 import { putFile } from "../lib/storage.ts";
 import { createApiKey, listApiKeys, revokeApiKey, shopForToken } from "./apikeys.ts";
-import { account, changePassword, requestReset, resendVerify, resetPassword, signIn, signOut, signUp, verifyEmail } from "./customers.ts";
+import { account, changePassword, googleSignIn, leaked, requestReset, resendVerify, resetPassword, signIn, signOut, signUp, verifyEmail } from "./customers.ts";
 import { createProduct, lastProductEdit, listProducts, quickEdit, storefrontProducts } from "./catalogue.ts";
 import { setCredentials } from "./credentials.ts";
 import {
@@ -378,14 +378,17 @@ describe("customer accounts", () => {
     const m = [...mails].reverse().find((x) => x.text.includes(`/account/${kind}?token=`))!;
     return m.text.match(/token=([\w-]+)/)![1];
   };
-  const pw = "a-strong-password";
+  // unique per run: well-known passwords are refused as leaked
+  const pw = `tinvo-${run}-first`;
+  const pw2 = `tinvo-${run}-second`;
+  const pw3 = `tinvo-${run}-third`;
 
   before(() => updateShopDetails(owner, shopId, { name: "Shop", gstin: "27ABCDE1234F1Z5", originState: "MH", orderPrefix: "TST", primaryDomain: "shop.example" }));
 
   it("shows orders only after the email is confirmed", async () => {
     const { session } = await signUp(shopId, { name: "Test Buyer", email: ` ${customer.email.toUpperCase()} `, password: pw });
     let me = await account(shopId, session);
-    assert.deepEqual(me.customer, { name: "Test Buyer", email: customer.email, verified: false });
+    assert.deepEqual(me.customer, { name: "Test Buyer", email: customer.email, verified: false, hasPassword: true });
     assert.equal(me.orders!.length, 0, "unconfirmed: someone could have typed another person's email");
 
     await resendVerify(shopId, session);
@@ -398,7 +401,9 @@ describe("customer accounts", () => {
     assert.equal(me.lastAddress!.pin, address.pin);
     assert.ok(me.orders![0].items.length >= 1);
 
-    await assert.rejects(signUp(shopId, { name: "X", email: customer.email, password: pw }), /already an account/);
+    assert.ok(mails.some((m) => m.to === customer.email && /^Welcome/.test(m.subject)), "welcome email on first confirm");
+    await assert.rejects(signUp(shopId, { name: "X", email: customer.email, password: pw }), (e: Error & { field?: string }) =>
+      /already an account/.test(e.message) && e.field === "email");
   });
 
   it("signs in and out, and rejects wrong passwords and fake sessions", async () => {
@@ -417,17 +422,50 @@ describe("customer accounts", () => {
     await requestReset(shopId, { email: "nobody@test.invalid" }); // same answer, no email
     await requestReset(shopId, { email: customer.email });
     const t = linkIn("reset");
-    const { session } = await resetPassword(shopId, { token: t, password: "another-password" });
-    await assert.rejects(resetPassword(shopId, { token: t, password: "third-password" }), /expired or was already used/);
+    const { session } = await resetPassword(shopId, { token: t, password: pw2 });
+    await assert.rejects(resetPassword(shopId, { token: t, password: `tinvo-${run}-fourth` }), /expired or was already used/);
     assert.equal((await account(shopId, before)).customer, null, "old devices are signed out");
     assert.ok((await account(shopId, session)).customer);
     await assert.rejects(signIn(shopId, { email: customer.email, password: pw }));
 
-    await assert.rejects(changePassword(shopId, { session, current: "wrong", password: "fourth-password" }), /current password/);
-    const next = await changePassword(shopId, { session, current: "another-password", password: "fourth-password" });
+    await assert.rejects(changePassword(shopId, { session, current: "wrong", password: pw3 }), /current password/);
+    const next = await changePassword(shopId, { session, current: pw2, password: pw3 });
     assert.equal((await account(shopId, session)).customer, null);
     assert.ok((await account(shopId, next.session)).customer);
     await assert.rejects(signUp(shopId, { name: "Y", email: `short-${run}@test.invalid`, password: "short" }), /8 characters/);
+  });
+});
+
+describe("customer accounts: Google and leaked passwords", () => {
+  it("refuses passwords from known data leaks", async () => {
+    assert.equal(await leaked("password123"), true);
+    assert.equal(await leaked(`tinvo-${run}-${Math.random()}`), false);
+    await assert.rejects(signUp(shopId, { name: "Z", email: `leak-${run}@test.invalid`, password: "password123" }), (e: Error & { field?: string }) =>
+      /data leak/.test(e.message) && e.field === "password");
+  });
+
+  it("creates a confirmed account from Google, with no password until one is added", async () => {
+    const g = `google-${run}@test.invalid`;
+    const before = mails.length;
+    const { session } = await googleSignIn(shopId, { email: g.toUpperCase(), name: "Gee Oogle" });
+    const me = await account(shopId, session);
+    assert.deepEqual(me.customer, { name: "Gee Oogle", email: g, verified: true, hasPassword: false });
+    assert.ok(mails.slice(before).some((m) => m.to === g && /^Welcome/.test(m.subject)));
+    await assert.rejects(signIn(shopId, { email: g, password: "" }), /don't match/);
+    const next = await changePassword(shopId, { session, password: `tinvo-${run}-google` });
+    assert.equal((await account(shopId, next.session)).customer!.hasPassword, true);
+    assert.ok((await signIn(shopId, { email: g, password: `tinvo-${run}-google` })).session);
+    const again = await googleSignIn(shopId, { email: g, name: "Someone Else" });
+    assert.equal((await account(shopId, again.session)).customer!.name, "Gee Oogle", "signing in again changes nothing");
+  });
+
+  it("takes an unconfirmed account back from whoever registered someone else's email", async () => {
+    const victim = `victim-${run}@test.invalid`;
+    const squatter = await signUp(shopId, { name: "Squatter", email: victim, password: `tinvo-${run}-squat` });
+    const owner = await googleSignIn(shopId, { email: victim, name: "Real Owner" });
+    assert.equal((await account(shopId, squatter.session)).customer, null, "squatter signed out");
+    await assert.rejects(signIn(shopId, { email: victim, password: `tinvo-${run}-squat` }), /don't match/);
+    assert.equal((await account(shopId, owner.session)).customer!.verified, true);
   });
 });
 

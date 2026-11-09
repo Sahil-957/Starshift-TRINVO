@@ -71,6 +71,13 @@
       "when": 1794210677159,
       "tag": "0009_customers",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1794221848864,
+      "tag": "0010_customer_google",
+      "breakpoints": true
     }
   ]
 }

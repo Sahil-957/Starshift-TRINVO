@@ -32,6 +32,8 @@ const columns = [
       { href: "/support/care", label: "Care" },
       { href: "/support/bulk", label: "Bulk & corporate" },
       { href: "/support/faq", label: "FAQ" },
+      { href: "/support/privacy", label: "Privacy policy" },
+      { href: "/support/terms", label: "Terms of service" },
     ],
   },
 ];

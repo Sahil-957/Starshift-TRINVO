@@ -1,6 +1,7 @@
 import {
   account,
   changePassword,
+  googleSignIn,
   requestReset,
   resendVerify,
   resetPassword,
@@ -27,6 +28,8 @@ export const POST = storefront(async (shopId, req) => {
       return signUp(shopId, b);
     case "sign-in":
       return signIn(shopId, b);
+    case "google":
+      return googleSignIn(shopId, b);
     case "sign-out":
       return signOut(shopId, session);
     case "resend-verify":

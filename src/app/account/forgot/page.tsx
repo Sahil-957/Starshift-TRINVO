@@ -13,7 +13,7 @@ export default function Forgot() {
   return (
     <Shell title="Forgot your password?" lede="Enter your account's email and we'll send you a link to choose a new one.">
       <AccountForm action={forgotAction} submit="Send reset link" busy="Sending…">
-        <Field label="Email" name="email" type="email" required autoComplete="email" />
+        <Field label="Email" name="email" type="email" required autoComplete="email" inputMode="email" autoFocus />
       </AccountForm>
       <p className="mt-8 text-[14px]">
         <Link href="/account/sign-in" className="text-ash underline underline-offset-4 hover:text-chalk">

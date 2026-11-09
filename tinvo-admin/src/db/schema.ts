@@ -381,7 +381,7 @@ export const customers = pgTable(
     shopId: uuid("shop_id").notNull().references(() => shops.id, { onDelete: "restrict" }),
     email: text("email").notNull(), // stored lower-cased
     name: text("name").notNull(),
-    passwordHash: text("password_hash").notNull(),
+    passwordHash: text("password_hash"), // null: signs in with Google only
     emailVerifiedAt: timestamp("email_verified_at", { withTimezone: true }),
     createdAt: createdAt(),
   },

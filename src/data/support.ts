@@ -372,6 +372,167 @@ export const supportPages: SupportPage[] = [
       },
     ],
   },
+  {
+    slug: "privacy",
+    label: "Privacy policy",
+    title: "Your data, plainly",
+    lede: "What we collect, why, who we share it with and how to have it changed or deleted. Last updated 9 November 2026.",
+    summary: "What we collect, who we share it with and your rights.",
+    accent: "var(--color-jade)",
+    sections: [
+      {
+        heading: "Who we are",
+        body: [
+          "TINVO (tinvo.starshift.in) is run by Starshift in India. We are responsible for the personal data described here. For anything about your data, email starshift07@gmail.com; we reply within 7 days and resolve requests within 30.",
+        ],
+      },
+      {
+        heading: "What we collect, and why",
+        rows: [
+          ["When you order", "Name, email, phone, delivery address and what you bought: to make, ship and support your order, and to send order and tracking emails."],
+          ["When you pay", "PayU handles your card, UPI or bank details. We never see or store them; we keep only PayU's transaction reference and whether it succeeded."],
+          ["If you create an account", "Name, email and a password stored only as a one-way hash, or your name and email from Google if you sign in with Google. Used to show your orders and fill in checkout."],
+          ["If you write a review", "Your rating, review, and first name with last initial (shown publicly once we approve it). We check it against your order but never publish the order or your email."],
+          ["If you join the drop list", "Your email, to tell you about new designs. Reply to any of those emails to come off it."],
+          ["When you browse", "Basic server logs (address, browser, pages, time) kept briefly for security and fixing faults. We use no advertising or analytics trackers."],
+        ],
+      },
+      {
+        heading: "Cookies and storage",
+        body: [
+          "We use one cookie when you're signed in, to keep you signed in (30 days), and a short-lived one during Google sign-in. Your cart is saved in your own browser. There are no advertising, tracking or third-party analytics cookies.",
+        ],
+      },
+      {
+        heading: "Who we share it with",
+        body: ["Only the services needed to run the shop, each only with what it needs. We never sell your data or share it for advertising."],
+        rows: [
+          ["PayU", "Takes your payment."],
+          ["Qikink", "Prints and ships your tumbler: receives your name, phone, address and the design."],
+          ["Courier partners", "Deliver the parcel, via Qikink: name, phone and address."],
+          ["Google", "Hosts our servers (Google Cloud, India) and sends our emails (Gmail); handles sign-in if you choose Continue with Google."],
+          ["Neon", "Hosts our database (in Singapore)."],
+        ],
+        points: ["We may also disclose data where Indian law requires it, for example to tax authorities or under a court order."],
+      },
+      {
+        heading: "How long we keep it",
+        points: [
+          "Orders and invoices: 8 years, as Indian tax and accounting law requires.",
+          "Your account: until you ask us to delete it. Sign-in sessions expire after 30 days; email links after 1–48 hours.",
+          "Drop list: until you unsubscribe.",
+          "Server logs: up to 30 days.",
+        ],
+      },
+      {
+        heading: "Your rights",
+        body: [
+          "Under India's Digital Personal Data Protection Act, 2023, you can ask us for a summary of the data we hold about you, have it corrected or completed, have it erased (except what the law makes us keep, such as invoices), withdraw consent, and nominate someone to act for you. Email starshift07@gmail.com from the address you use with us. If you're not satisfied with our answer, you can complain to the Data Protection Board of India.",
+        ],
+      },
+      {
+        heading: "Keeping it safe",
+        body: [
+          "Everything travels over HTTPS. Passwords are stored only as bcrypt hashes and checked against known data leaks; sign-in links and sessions are random, single-purpose and stored only in hashed form. Access to the admin is limited to the people who run the shop.",
+        ],
+      },
+      {
+        heading: "Children",
+        body: ["The shop is for adults. If you are under 18, please order with a parent or guardian."],
+      },
+      {
+        heading: "Changes",
+        body: ["If we change this policy we update the date at the top, and for significant changes we email account holders before they take effect."],
+      },
+    ],
+  },
+  {
+    slug: "terms",
+    label: "Terms of service",
+    title: "The terms of buying from us",
+    lede: "The agreement between you and TINVO when you use this site or place an order. Last updated 9 November 2026.",
+    summary: "Orders, pricing, accounts, reviews and the legal small print.",
+    accent: "var(--color-bronze)",
+    sections: [
+      {
+        heading: "Who you're dealing with",
+        body: [
+          "This site and shop are run by Starshift in India under the TINVO name (\"we\", \"us\"). By using the site or placing an order you agree to these terms, together with our Privacy policy, Shipping, and Returns & refunds pages, which form part of them. Contact: starshift07@gmail.com.",
+        ],
+      },
+      {
+        heading: "Orders",
+        points: [
+          "Your order is a request to buy. It's accepted once your payment succeeds and you receive our order confirmation email.",
+          "Each tumbler is printed for you after you order. Once printing has started we can't cancel or change the order, except as set out under Returns & refunds.",
+          "If we can't fulfil an order (for example a design can't be printed, or the address can't be served) we cancel it and refund you in full.",
+          "Orders are for personal use. We may decline orders that look like resale or fraud.",
+        ],
+      },
+      {
+        heading: "Prices and payment",
+        points: [
+          "Prices are in Indian rupees and include GST. Shipping is shown before you pay.",
+          "Payment is taken online through PayU (UPI, cards, netbanking). We don't offer cash on delivery.",
+          "If a price on the site is clearly wrong, we'll tell you and you can confirm at the right price or get a full refund.",
+        ],
+      },
+      {
+        heading: "The product",
+        body: [
+          "We show each design and colour as accurately as we can, but screens differ and printing on a curved metal surface varies slightly from piece to piece; small variations in colour and placement are part of a made-to-order product and are not defects. Care instructions are on the Care page.",
+        ],
+      },
+      {
+        heading: "Delivery, returns and refunds",
+        body: [
+          "Delivery is covered on the Shipping page, and faults, damage and refunds on the Returns & refunds page. Nothing in these terms affects your rights under the Consumer Protection Act, 2019 and the Consumer Protection (E-Commerce) Rules, 2020.",
+        ],
+      },
+      {
+        heading: "Your account",
+        points: [
+          "Keep your password private; you're responsible for activity on your account.",
+          "Give us accurate details, and use an email you own: orders are linked to accounts by email.",
+          "You can ask us to close your account at any time. We may suspend accounts used for fraud or abuse.",
+        ],
+      },
+      {
+        heading: "Reviews",
+        body: [
+          "Only buyers with a paid order can review a design. Reviews must be honest and about the product; we may decline or remove reviews that are abusive, unlawful, off-topic or contain personal details. You let us show your review, with your first name and last initial, on the site.",
+        ],
+      },
+      {
+        heading: "Designs and content",
+        body: [
+          "The TINVO name, designs, photos and text on this site belong to us. Buying a tumbler gives you the tumbler, not the right to reproduce its design. Please don't copy, scrape or reuse the site's content without permission.",
+        ],
+      },
+      {
+        heading: "Our responsibility",
+        body: [
+          "We're responsible for losses you suffer that are a foreseeable result of us breaking these terms or failing to take reasonable care, up to the amount you paid for the order concerned. We aren't responsible for losses that weren't foreseeable, for business losses, or for misuse of the product against its care instructions. Nothing here limits liability that can't be limited under Indian law.",
+        ],
+      },
+      {
+        heading: "Disputes",
+        body: [
+          "If something goes wrong, email us first: most things are fixed fastest that way. These terms are governed by the laws of India, and the courts of India have jurisdiction. You can also approach a consumer commission under the Consumer Protection Act, 2019.",
+        ],
+      },
+      {
+        heading: "Grievance officer",
+        body: [
+          "As required by the Consumer Protection (E-Commerce) Rules, 2020: Sahil Ambekar, Starshift, starshift07@gmail.com. We acknowledge complaints within 48 hours and resolve them within one month.",
+        ],
+      },
+      {
+        heading: "Changes",
+        body: ["We may update these terms; the version in force when you place an order applies to that order."],
+      },
+    ],
+  },
 ];
 
 export const getSupportPage = (slug: string) =>
