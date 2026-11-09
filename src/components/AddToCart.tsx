@@ -56,16 +56,6 @@ export default function AddToCart({ slug, accent, className = "" }: { slug: stri
   );
 }
 
-export function CartLink() {
-  const count = useCart().reduce((n, l) => n + l.quantity, 0);
-  return (
-    <Link href="/cart" aria-label={`Cart, ${count} items`} className="label flex h-10 items-center gap-2 border hairline px-3 text-ash hover:text-chalk">
-      Cart
-      {count > 0 && <span className="min-w-5 bg-chalk px-1 text-center text-void">{count}</span>}
-    </Link>
-  );
-}
-
 /** The phone's sticky bottom bar: one tap to checkout. */
 export function BuyNowButton({ slug, accent }: { slug: string; accent: string }) {
   const buyNow = useBuyNow(slug);

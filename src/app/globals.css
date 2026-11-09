@@ -21,7 +21,13 @@
   --animate-sweep: sweep 1.1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   --animate-cut: cut 1.1s cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-fill: fill 5s linear both;
+  --animate-fade: fade 0.35s ease-out both;
 
+  @keyframes fade {
+    from {
+      opacity: 0;
+    }
+  }
   @keyframes fill {
     from { transform: scaleX(0); }
     to { transform: scaleX(1); }
