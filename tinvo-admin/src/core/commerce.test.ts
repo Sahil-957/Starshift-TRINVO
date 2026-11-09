@@ -17,7 +17,7 @@ import { orderEvents, orders } from "../db/schema.ts";
 import { envCreds } from "../lib/qikink.ts";
 import { putFile } from "../lib/storage.ts";
 import { createApiKey, listApiKeys, revokeApiKey, shopForToken } from "./apikeys.ts";
-import { account, changePassword, googleSignIn, leaked, requestReset, resendVerify, resetPassword, signIn, signOut, signUp, verifyEmail } from "./customers.ts";
+import { account, accountOrder, changePassword, googleSignIn, leaked, requestReset, resendVerify, resetPassword, signIn, signOut, signUp, verifyEmail } from "./customers.ts";
 import { createProduct, lastProductEdit, listProducts, quickEdit, storefrontProducts } from "./catalogue.ts";
 import { setCredentials } from "./credentials.ts";
 import {
@@ -222,6 +222,15 @@ describe("checkout to delivery (PayU)", () => {
   it("lets the customer look up the order with number and email only", async () => {
     assert.equal((await lookupOrder(shopId, "tst-1001", customer.email.toUpperCase()))?.status, "in_production");
     assert.equal(await lookupOrder(shopId, "TST-1001", "someone@else.invalid"), null);
+    // a guest lookup shows the order in full, but not the street address or the whole phone number
+    const v = (await lookupOrder(shopId, "TST-1001", customer.email))!;
+    assert.deepEqual(v.timeline.map((t) => t.step), ["placed", "paid", "printing"]);
+    assert.equal(v.payment?.provider, "PayU");
+    assert.equal(v.items[0].unitPriceMinor, 149000);
+    assert.equal(v.subtotalMinor + v.shippingMinor - v.discountMinor, v.totalMinor);
+    assert.deepEqual(v.shipTo.lines, []);
+    assert.equal(v.shipTo.pin, address.pin);
+    assert.match(v.shipTo.phone, /^•+3210$/);
   });
 
   it("refunds through PayU and reports it honestly", async () => {
@@ -399,6 +408,9 @@ describe("customer accounts", () => {
     assert.equal(me.customer!.verified, true);
     assert.ok(me.orders!.length >= 1 && me.orders!.every((o) => o.status !== "pending_payment"));
     assert.equal(me.lastAddress!.pin, address.pin);
+    const detail = (await accountOrder(shopId, session, me.orders![0].number.toLowerCase())).order!;
+    assert.equal(detail.shipTo.lines[0], address.line1, "the confirmed owner sees the full address");
+    assert.equal((await accountOrder(shopId, session, "TST-9999")).order, null);
     assert.ok(me.orders![0].items.length >= 1);
 
     assert.ok(mails.some((m) => m.to === customer.email && /^Welcome/.test(m.subject)), "welcome email on first confirm");

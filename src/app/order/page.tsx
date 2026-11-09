@@ -5,38 +5,9 @@ import ClearCart from "./clear-cart";
 import Link from "next/link";
 import { currentAccount } from "@/lib/account";
 import { EmailMyOrders } from "./email-orders";
+import OrderDetail, { type OrderView } from "@/components/OrderDetail";
 
 export const metadata: Metadata = { title: "Track your order", robots: { index: false } };
-
-type Order = {
-  number: string;
-  status: string;
-  placedAt: string;
-  totalMinor: number;
-  courier: string | null;
-  awb: string | null;
-  trackingUrl: string | null;
-  deliveredAt: string | null;
-  items: { title: string; quantity: number }[];
-};
-
-const steps = [
-  ["paid", "Paid"],
-  ["in_production", "Printing"],
-  ["shipped", "Shipped"],
-  ["delivered", "Delivered"],
-] as const;
-
-const say: Record<string, string> = {
-  pending_payment: "Waiting for payment. If you paid, this updates within a few minutes.",
-  paid: "Paid. Your tumbler is queued for printing.",
-  in_production: "Being printed and packed.",
-  shipped: "On its way.",
-  delivered: "Delivered. Enjoy it.",
-  cancelled: "This order was cancelled.",
-  refunded: "This order was refunded.",
-  returned: "This order was returned.",
-};
 
 export default async function OrderPage({ searchParams }: PageProps<"/order">) {
   if (!checkoutEnabled) notFound();
@@ -44,7 +15,7 @@ export default async function OrderPage({ searchParams }: PageProps<"/order">) {
   const number = String(q.number ?? "").slice(0, 20);
   const email = String(q.email ?? "").slice(0, 200);
 
-  let order: Order | null = null;
+  let order: OrderView | null = null;
   let error: string | null = null;
   if (number && email) {
     try {
@@ -57,24 +28,23 @@ export default async function OrderPage({ searchParams }: PageProps<"/order">) {
     }
   }
   const signedIn = order ? !!(await currentAccount()) : false;
-  const reached = order ? steps.findIndex(([s]) => s === order.status) : -1;
 
   return (
-    <div className="mx-auto max-w-2xl px-5 py-16 sm:px-8">
-      <h1 className="display text-[clamp(2.5rem,6vw,4rem)] text-chalk">{order ? `Order ${order.number}` : "Track your order"}</h1>
+    <div className={`mx-auto px-5 py-16 sm:px-8 ${order ? "max-w-5xl" : "max-w-2xl"}`}>
+      {!order && <h1 className="display text-[clamp(2.5rem,6vw,4rem)] text-chalk">Track your order</h1>}
 
       {order ? (
         <>
           {q.placed && order.status !== "pending_payment" && (
             <>
               <ClearCart />
-              <p className="mt-6 border border-chalk/40 p-5 text-[15px] text-chalk">
+              <p className="mb-2 border border-jade/40 bg-jade/5 p-5 text-[15px] text-chalk">
                 Thank you! Your order is placed and paid. Keep your order number: you can track it on this page any time.
               </p>
             </>
           )}
           {q.failed && order.status === "pending_payment" && (
-            <p role="alert" className="mt-6 border border-rose/50 p-5 text-[15px] text-chalk">
+            <p role="alert" className="mb-2 border border-rose/50 p-5 text-[15px] text-chalk">
               The payment didn&apos;t go through, so you haven&apos;t been charged for this order. Your cart is still saved:{" "}
               <a href="/checkout" className="underline underline-offset-4">
                 try again
@@ -82,35 +52,9 @@ export default async function OrderPage({ searchParams }: PageProps<"/order">) {
               .
             </p>
           )}
-          <p className="mt-6 text-[17px] text-chalk">{say[order.status] ?? order.status}</p>
-          {reached >= 0 && (
-            <ol className="mt-8 grid grid-cols-4 gap-2">
-              {steps.map(([s, label], i) => (
-                <li key={s} className={`border-t-2 pt-3 ${i <= reached ? "border-chalk text-chalk" : "border-chalk/15 text-dim"}`}>
-                  <span className="label">{label}</span>
-                </li>
-              ))}
-            </ol>
-          )}
-          {order.trackingUrl && (
-            <p className="mt-8 text-[15px] text-ash">
-              {order.courier} · AWB {order.awb} ·{" "}
-              <a href={order.trackingUrl} target="_blank" rel="noreferrer" className="text-chalk underline underline-offset-4">
-                Track the parcel ↗
-              </a>
-            </p>
-          )}
-          <ul className="mt-10 border-t hairline">
-            {order.items.map((i) => (
-              <li key={i.title} className="flex justify-between border-b hairline py-3 text-[15px]">
-                <span className="text-chalk">{i.title}</span>
-                <span className="text-ash">× {i.quantity}</span>
-              </li>
-            ))}
-          </ul>
-          <p className="mt-4 text-right font-mono text-chalk">
-            Total ₹{(order.totalMinor / 100).toLocaleString("en-IN")}
-          </p>
+          <div className={q.placed || q.failed ? "mt-10" : ""}>
+            <OrderDetail order={order} />
+          </div>
         </>
       ) : (
         <form className="mt-10 grid gap-5" method="get">

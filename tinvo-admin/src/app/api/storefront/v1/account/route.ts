@@ -1,5 +1,6 @@
 import {
   account,
+  accountOrder,
   changePassword,
   googleSignIn,
   requestReset,
@@ -24,6 +25,8 @@ export const POST = storefront(async (shopId, req) => {
   switch (b.action) {
     case "me":
       return account(shopId, session);
+    case "order":
+      return accountOrder(shopId, session, String(b.number ?? ""));
     case "sign-up":
       return signUp(shopId, b);
     case "sign-in":

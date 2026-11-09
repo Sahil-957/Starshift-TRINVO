@@ -103,17 +103,20 @@ export default async function AccountPage({ searchParams }: PageProps<"/account"
                     ) : (
                       <p className="label mt-5 text-dim">{other[o.status] ?? o.status}</p>
                     )}
-                    <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-[14px]">
-                      {o.trackingUrl && (
-                        <a href={o.trackingUrl} target="_blank" rel="noreferrer" className="text-chalk underline underline-offset-4">
-                          Track the parcel ↗
-                        </a>
-                      )}
-                      {o.courier && o.awb && (
-                        <span className="text-ash">
-                          {o.courier} · AWB {o.awb}
-                        </span>
-                      )}
+                    <div className="mt-5 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t hairline pt-4 text-[14px]">
+                      <span className="text-ash">
+                        {o.courier && o.awb ? `${o.courier} · AWB ${o.awb}` : o.status === "delivered" ? "Delivered" : "Tracking link appears once it ships"}
+                      </span>
+                      <span className="flex gap-5">
+                        {o.trackingUrl && (
+                          <a href={o.trackingUrl} target="_blank" rel="noreferrer" className="text-chalk underline underline-offset-4">
+                            Track parcel ↗
+                          </a>
+                        )}
+                        <Link href={`/account/orders/${o.number}`} className="label text-chalk hover:text-bronze">
+                          View details →
+                        </Link>
+                      </span>
                     </div>
                   </li>
                 );

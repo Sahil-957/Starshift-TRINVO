@@ -14,7 +14,7 @@ import { db, withShop, type Tx } from "../db/index.ts";
 import { customers, customerTokens, orderItems, orders, shops } from "../db/schema.ts";
 import { sendMail } from "../lib/mail.ts";
 import { accountLink } from "./email-templates.ts";
-import { CheckoutError } from "./orders.ts";
+import { CheckoutError, customerOrderView } from "./orders.ts";
 
 const DAY = 86_400_000;
 const LIFETIME = { session: 30 * DAY, verify: 2 * DAY, reset: 60 * 60_000 } as const;
@@ -308,4 +308,23 @@ export const account = (shopId: string, session: string) =>
       })),
       lastAddress: last ? { name: last.customerName, phone: last.phone, ...last.shippingAddress } : null,
     };
+  });
+
+/** One of the signed-in customer's orders in full, or null (not theirs, not confirmed, or no such order). */
+export const accountOrder = (shopId: string, session: string, number: string) =>
+  withShop(shopId, async (tx) => {
+    const h = await holder(tx, shopId, session, "session");
+    if (!h?.customer.emailVerifiedAt) return { order: null };
+    const [o] = await tx
+      .select()
+      .from(orders)
+      .where(
+        and(
+          eq(orders.shopId, shopId),
+          eq(orders.number, String(number).trim().toUpperCase()),
+          eq(sql`lower(${orders.email})`, h.customer.email),
+          ne(orders.status, "pending_payment"),
+        ),
+      );
+    return { order: o ? await customerOrderView(tx, o, true) : null };
   });

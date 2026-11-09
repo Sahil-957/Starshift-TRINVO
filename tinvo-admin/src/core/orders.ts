@@ -560,10 +560,77 @@ export async function getOrderDetail(shopId: string, orderId: string) {
   });
 }
 
+const mask = (s: string, keep: number) => (s.length <= keep ? s : "•".repeat(Math.min(6, s.length - keep)) + s.slice(-keep));
+
+/**
+ * One order as its buyer sees it: items, money, payment, delivery and a dated
+ * timeline of customer-facing steps (never internal errors or supplier details).
+ * `full` = a signed-in, confirmed account; otherwise (number + email lookup)
+ * the street address and phone are partly hidden, since order numbers are guessable.
+ */
+export async function customerOrderView(tx: Tx, o: typeof orders.$inferSelect, full: boolean) {
+  const items = await tx
+    .select({ title: orderItems.title, slug: orderItems.slug, quantity: orderItems.quantity, unitPriceMinor: orderItems.unitPriceMinor })
+    .from(orderItems)
+    .where(eq(orderItems.orderId, o.id));
+  const tax = await tx
+    .select({ kind: orderTaxLines.kind, rateBps: orderTaxLines.rateBps, amountMinor: orderTaxLines.amountMinor })
+    .from(orderTaxLines)
+    .where(eq(orderTaxLines.orderId, o.id));
+  const events = await tx
+    .select({ type: orderEvents.type, data: orderEvents.data, at: orderEvents.createdAt })
+    .from(orderEvents)
+    .where(eq(orderEvents.orderId, o.id))
+    .orderBy(orderEvents.createdAt);
+
+  // the first time each customer-facing step happened
+  const steps: { step: string; at: Date }[] = [];
+  const add = (step: string, at: Date | null | undefined) => at && !steps.some((s) => s.step === step) && steps.push({ step, at });
+  add("placed", o.createdAt);
+  add("paid", o.paidAt ?? events.find((e) => e.type === "paid")?.at);
+  add("printing", events.find((e) => e.type === "fulfilment.sent")?.at);
+  for (const e of events) {
+    const status = (e.data as { status?: string } | null)?.status;
+    if (e.type === "fulfilment.status" && (status === "shipped" || status === "delivered")) add("shipped", e.at);
+    if (e.type === "cancelled") add("cancelled", e.at);
+    if (e.type === "refunded") add("refunded", e.at);
+  }
+  add("delivered", o.deliveredAt);
+
+  const a = o.shippingAddress;
+  return {
+    number: o.number,
+    status: o.status,
+    placedAt: o.createdAt,
+    currency: o.currency,
+    items,
+    subtotalMinor: o.subtotalMinor,
+    shippingMinor: o.shippingMinor,
+    discountMinor: o.discountMinor,
+    taxMinor: o.taxMinor,
+    tax: tax.map((t) => ({ kind: t.kind.toUpperCase(), ratePercent: t.rateBps / 100, amountMinor: t.amountMinor })),
+    totalMinor: o.totalMinor,
+    payment: o.paidAt ? { provider: o.paymentProvider === "payu" ? "PayU" : o.paymentProvider, reference: o.paymentGatewayId, paidAt: o.paidAt } : null,
+    shipTo: {
+      name: o.customerName,
+      phone: full ? o.phone : mask(o.phone.replace(/\s/g, ""), 4),
+      lines: full ? [a.line1, a.line2].filter(Boolean) : [],
+      city: a.city,
+      state: STATES[a.state] ?? a.state,
+      pin: a.pin,
+    },
+    courier: o.courier,
+    awb: o.awb,
+    trackingUrl: o.trackingUrl,
+    deliveredAt: o.deliveredAt,
+    timeline: steps.sort((x, y) => x.at.getTime() - y.at.getTime()),
+  };
+}
+
 /** For the storefront's "track my order": needs both number and email. */
-export async function lookupOrder(shopId: string, number: string, email: string) {
-  const [o] = await withShop(shopId, (tx) =>
-    tx
+export const lookupOrder = (shopId: string, number: string, email: string) =>
+  withShop(shopId, async (tx) => {
+    const [o] = await tx
       .select()
       .from(orders)
       .where(
@@ -572,22 +639,6 @@ export async function lookupOrder(shopId: string, number: string, email: string)
           eq(orders.number, number.trim().toUpperCase()),
           eq(sql`lower(${orders.email})`, email.trim().toLowerCase()),
         ),
-      ),
-  );
-  if (!o) return null;
-  const items = await withShop(shopId, (tx) =>
-    tx.select({ title: orderItems.title, quantity: orderItems.quantity }).from(orderItems).where(eq(orderItems.orderId, o.id)),
-  );
-  return {
-    number: o.number,
-    status: o.status,
-    placedAt: o.createdAt,
-    totalMinor: o.totalMinor,
-    currency: o.currency,
-    courier: o.courier,
-    awb: o.awb,
-    trackingUrl: o.trackingUrl,
-    deliveredAt: o.deliveredAt,
-    items,
-  };
-}
+      );
+    return o ? customerOrderView(tx, o, false) : null;
+  });
