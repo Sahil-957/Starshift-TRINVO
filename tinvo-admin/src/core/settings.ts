@@ -73,13 +73,11 @@ export async function archiveShop(userId: string, shopId: string) {
 export type CheckoutSettings = {
   shippingFlatMinor: number;
   freeShippingOverMinor: number | null;
-  /** Vercel deploy hook that rebuilds the storefront after catalogue edits */
-  storefrontDeployHook: string | null;
   /** "Buy 2 save X, buy 3 save Y" until a date; null when off */
   multiBuy: MultiBuy | null;
 };
 
-const defaults: CheckoutSettings = { shippingFlatMinor: 0, freeShippingOverMinor: null, storefrontDeployHook: null, multiBuy: null };
+const defaults: CheckoutSettings = { shippingFlatMinor: 0, freeShippingOverMinor: null, multiBuy: null };
 const keys = Object.keys(defaults) as (keyof CheckoutSettings)[];
 
 export async function getCheckoutSettings(shopId: string): Promise<CheckoutSettings> {
@@ -95,7 +93,6 @@ export async function getCheckoutSettings(shopId: string): Promise<CheckoutSetti
 export const checkoutSettingsInput = z.object({
   shippingFlatMinor: z.number().int().min(0).max(1_000_000),
   freeShippingOverMinor: z.number().int().min(0).nullable(),
-  storefrontDeployHook: z.url().startsWith("https://").nullable(),
   multiBuy: z
     .object({
       tiers: z

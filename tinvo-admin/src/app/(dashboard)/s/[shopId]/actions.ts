@@ -5,6 +5,7 @@
  * action re-checks access before doing anything. "manage" excludes staff;
  * money and secrets additionally need an organisation owner or admin.
  */
+import { writeFile } from "node:fs/promises";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ZodError } from "zod";
@@ -17,7 +18,6 @@ import { requireShop } from "@/core/session";
 import {
   archiveShop,
   checkoutSettingsInput,
-  getCheckoutSettings,
   setCheckoutSettings,
   setShopState,
   updateShopDetails,
@@ -92,16 +92,22 @@ export async function updateProductAction(shopId: string, productId: string, _: 
   return r;
 }
 
-/** Rebuilds the storefront so catalogue edits go live (Vercel deploy hook). */
+/**
+ * Rebuilds the website so catalogue edits go live. The server watches this file
+ * (deploy/systemd/tinvo-publish.path) and runs deploy.sh when it changes.
+ * ponytail: a publish while a deploy is already running is dropped; publish again after it.
+ */
 export async function publishStorefrontAction(shopId: string): Promise<FormState> {
   await requireShop(shopId, "manage");
-  const { storefrontDeployHook } = await getCheckoutSettings(shopId);
-  if (!storefrontDeployHook) return { error: "Add the storefront deploy hook in Settings first." };
-  const res = await fetch(storefrontDeployHook, { method: "POST" });
-  if (!res.ok) return { error: `The website didn't accept the publish request (${res.status}).` };
+  try {
+    await writeFile("/var/lib/tinvo/publish.request", `${new Date().toISOString()}
+`);
+  } catch {
+    return { error: "Publishing only works on the live server." };
+  }
   await setShopState(shopId, "lastPublishedAt", new Date().toISOString());
   revalidatePath(`/s/${shopId}`, "layout");
-  return { ok: "Publishing. The website shows your changes in about 3–5 minutes." };
+  return { ok: "Publishing. The website shows your changes in about 10 minutes." };
 }
 
 /** Prices and statuses for every product, from the products table, in one save. */
@@ -234,7 +240,6 @@ export async function checkoutSettingsAction(shopId: string, _: FormState, form:
       checkoutSettingsInput.parse({
         shippingFlatMinor: rupees(f(form, "shipping")) ?? 0,
         freeShippingOverMinor: rupees(f(form, "freeOver")),
-        storefrontDeployHook: f(form, "deployHook").trim() || null,
         multiBuy: multiBuyFrom(form),
       }),
     ),

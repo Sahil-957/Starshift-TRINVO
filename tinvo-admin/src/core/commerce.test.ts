@@ -101,7 +101,7 @@ before(async () => {
   shopId = (await createShop(owner, orgId, { name: "Shop", slug: `c-${run}`, settlementCurrency: "INR" })).id;
   bareShopId = (await createShop(owner, orgId, { name: "Bare", slug: `bare-${run}`, settlementCurrency: "INR" })).id;
   await updateShopDetails(owner, shopId, { name: "Shop", gstin: "27ABCDE1234F1Z5", originState: "MH", orderPrefix: "TST", primaryDomain: "" });
-  await setCheckoutSettings(shopId, { shippingFlatMinor: 9900, freeShippingOverMinor: 200000, storefrontDeployHook: null, multiBuy: null });
+  await setCheckoutSettings(shopId, { shippingFlatMinor: 9900, freeShippingOverMinor: 200000, multiBuy: null });
   await setCredentials(shopId, "payu", payu);
   await setCredentials(shopId, "qikink", envCreds());
 
@@ -490,7 +490,7 @@ describe("forms", () => {
 });
 
 describe("multi-buy offer", () => {
-  const settings = { shippingFlatMinor: 9900, freeShippingOverMinor: 200000, storefrontDeployHook: null };
+  const settings = { shippingFlatMinor: 9900, freeShippingOverMinor: 200000 };
 
   it("takes the saving off at checkout, charges the rest, and shows it in the email and on Qikink", async () => {
     const endsAt = new Date(Date.now() + 3_600_000).toISOString();

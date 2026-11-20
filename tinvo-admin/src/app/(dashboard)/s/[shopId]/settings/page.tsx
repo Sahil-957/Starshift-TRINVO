@@ -104,11 +104,6 @@ export default async function SettingsPage({ params }: PageProps<"/s/[shopId]/se
               <input name="offerEnds" type="datetime-local" defaultValue={istLocal(checkout.multiBuy?.endsAt)} className="field" />
             </Field>
           </div>
-          <div className="sm:col-span-2">
-            <Field label="Storefront deploy hook" hint="Vercel → storefront project → Settings → Git → Deploy Hooks. Used by “Publish to storefront”.">
-              <input name="deployHook" type="url" defaultValue={checkout.storefrontDeployHook ?? ""} className="field" />
-            </Field>
-          </div>
         </ActionForm>
       </Section>
 
