@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import ProductFrame from "@/components/ProductFrame";
-import { formatPrice, getProduct, multiBuyFor, shippingFor } from "@/data/products";
+import { formatPrice, getProduct, mrpSavingFor, multiBuyFor, shippingFor } from "@/data/products";
 import { cart, useCart } from "@/lib/cart";
 
 /** Lines with a product that is still on sale; anything else is dropped from view. */
@@ -18,6 +18,7 @@ export default function CartView() {
   const quantity = lines.reduce((s, l) => s + l.quantity, 0);
   const { saving, next } = multiBuyFor(quantity);
   const shipping = shippingFor(subtotal - saving);
+  const saved = saving + mrpSavingFor(lines);
 
   if (lines.length === 0) {
     return (
@@ -40,7 +41,14 @@ export default function CartView() {
               <Link href={`/shop/${l.slug}`} className="text-[16px] text-chalk hover:underline">
                 {l.product.name}
               </Link>
-              <p className="mt-1 text-[13px] text-dim">{formatPrice(l.product.price)} each</p>
+              <p className="mt-1 text-[13px] text-dim">
+                {formatPrice(l.product.price)} each
+                {l.product.compareAt && l.product.compareAt > l.product.price && (
+                  <>
+                    {" "}· MRP <s>{formatPrice(l.product.compareAt)}</s>
+                  </>
+                )}
+              </p>
               <div className="mt-3 flex items-center gap-2">
                 <button type="button" aria-label={`One fewer ${l.product.name}`} onClick={() => cart.set(l.slug, l.quantity - 1)} className="h-8 w-8 border hairline text-ash hover:text-chalk">
                   −
@@ -84,6 +92,7 @@ export default function CartView() {
           <p className="mt-1 text-[13px] text-dim">
             Shipping {shipping ? formatPrice(shipping) : "free"} · Prices include GST.
           </p>
+          {saved > 0 && <p className="mt-2 text-[14px] text-jade">You save {formatPrice(saved)} on this order</p>}
         </div>
         <Link href="/checkout" className="label bg-chalk px-10 py-4 text-void hover:bg-bronze">
           Checkout

@@ -2,7 +2,7 @@ import Link from "next/link";
 import ProductFrame from "./ProductFrame";
 import Swatches from "./Swatches";
 import { LaunchTag, Price } from "./Launch";
-import { barrel, type Product } from "@/data/products";
+import { barrel, percentOff, type Product } from "@/data/products";
 
 export default function ProductCard({
   product,
@@ -22,12 +22,15 @@ export default function ProductCard({
             <ProductFrame product={product} image={product.images[1]} sizes={sizes} />
           </div>
         )}
-        <span
-          className="label absolute left-4 top-4 z-[3]"
-          style={{ color: product.accent }}
-        >
-          {String(index + 1).padStart(2, "0")}
-        </span>
+        {percentOff(product) ? (
+          <span className="label absolute left-4 top-4 z-[3] px-2 py-1.5 text-void" style={{ backgroundColor: product.accent }}>
+            {percentOff(product)}% off
+          </span>
+        ) : (
+          <span className="label absolute left-4 top-4 z-[3]" style={{ color: product.accent }}>
+            {String(index + 1).padStart(2, "0")}
+          </span>
+        )}
         <span className="absolute right-4 top-4 z-[3]">
           <Swatches palette={product.palette} />
         </span>
@@ -39,11 +42,11 @@ export default function ProductCard({
         </span>
       </div>
 
-      <div className="mt-5 flex items-baseline justify-between gap-4 border-t hairline pt-4">
+      <div className="mt-5 border-t hairline pt-4">
         <h3 className="display text-xl text-chalk">{product.name}</h3>
-        <span className="label tabular-nums text-ash">
+        <p className="label mt-2.5 tabular-nums text-ash">
           <Price product={product} />
-        </span>
+        </p>
       </div>
       <p className="mt-2 text-[14px] leading-snug text-ash">{product.tagline}</p>
       <p className="label mt-3 text-dim">

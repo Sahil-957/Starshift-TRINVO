@@ -3,8 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRef, useState } from "react";
-import { countdown, LAUNCH_LAST_DAY, useLaunchLeft, useOfferLine } from "./Launch";
-import { barrel, formatPrice, products, shippingPromise } from "@/data/products";
+import { Clock, LAUNCH_LAST_DAY, LAUNCH_PRICE_LINE, useLaunchLeft, useOfferLine } from "./Launch";
+import { barrel, formatPrice, percentOff, products, shippingPromise } from "@/data/products";
 
 /** Where each part sits in the 4:5 studio render, in % of the frame. */
 const callouts = [
@@ -89,15 +89,15 @@ export default function Hero() {
               {products.length} designs · one {barrel.capacity} barrel
             </p>
           ) : (
-            <p className="label animate-sweep text-ash">
-              <span className="transition-colors duration-700" style={{ color: lead.accent }}>
+            <div className="flex animate-sweep flex-wrap items-center gap-x-5 gap-y-3">
+              <span className="label px-3 py-2 text-void transition-[background-color] duration-700" style={{ backgroundColor: lead.accent }}>
                 Launch week
               </span>
-              {" · "}
-              <span className="tabular-nums">
-                {launchLeft === null ? `ends ${LAUNCH_LAST_DAY}` : `ends in ${countdown(launchLeft)}`}
+              <span className="flex items-center gap-4">
+                {launchLeft !== null && <span className="label text-dim">ends in</span>}
+                <Clock ms={launchLeft} />
               </span>
-            </p>
+            </div>
           )}
 
           <h1 className="display mt-6 animate-cut text-[clamp(2.75rem,7vw,6rem)] text-chalk">
@@ -117,10 +117,16 @@ export default function Hero() {
             another tumbler.
           </p>
 
-          {offer && (
-            <p className="label mt-6 transition-colors duration-700" style={{ color: lead.accent }}>
-              {offer} · {shippingPromise}
-            </p>
+          {launchLeft !== 0 && (
+            <div className="mt-7 max-w-md border-l-2 py-1 pl-4 transition-colors duration-700" style={{ borderColor: lead.accent }}>
+              <p className="label transition-colors duration-700" style={{ color: lead.accent }}>
+                Launch offer · till {LAUNCH_LAST_DAY}
+              </p>
+              <p className="mt-2.5 text-[18px] leading-snug text-chalk">{offer ? `${offer}, mix any designs` : LAUNCH_PRICE_LINE}</p>
+              <p className="mt-1.5 text-[14px] text-ash">
+                {[offer && LAUNCH_PRICE_LINE, percentOff(lead) && `MRP ${formatPrice(lead.compareAt!)}, ${percentOff(lead)}% off`, shippingPromise].filter(Boolean).join(" · ")}
+              </p>
+            </div>
           )}
 
           <div className="mt-9 flex flex-wrap items-center gap-3">

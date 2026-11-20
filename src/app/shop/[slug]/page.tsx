@@ -96,6 +96,11 @@ export default async function ProductPage({ params }: PageProps<"/shop/[slug]">)
               {barrel.capacity} · {barrel.capacityMl} ml
             </p>
           </div>
+          {product.compareAt && product.compareAt > product.price && (
+            <p className="mt-2 text-[14px] text-jade">
+              You save {formatPrice(product.compareAt - product.price)} on MRP <span className="text-dim">· inclusive of all taxes</span>
+            </p>
+          )}
           <OfferNote accent={product.accent} />
 
           <div className="mt-9">
@@ -206,7 +211,7 @@ export default async function ProductPage({ params }: PageProps<"/shop/[slug]">)
         <div className="flex items-center justify-between gap-4 px-5 py-3">
           <div className="min-w-0">
             <p className="truncate text-[14px] text-chalk">{product.name}</p>
-            <p className="font-mono text-[13px] tabular-nums text-ash">{formatPrice(product.price)}</p>
+            <p className="font-mono text-[13px] tabular-nums text-ash"><Price product={product} /></p>
           </div>
           {checkoutEnabled ? (
             <BuyNowButton slug={product.slug} accent={product.accent} />

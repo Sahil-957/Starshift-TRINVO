@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useCartLines } from "../cart/view";
 import { STATES } from "@/data/india";
-import { formatPrice, multiBuyFor, shippingFor } from "@/data/products";
+import { formatPrice, multiBuyFor, shippingFor, mrpSavingFor } from "@/data/products";
 
 /** Sends the browser to PayU's payment page with the admin-signed fields. */
 function goToPayu(action: string, fields: Record<string, string>) {
@@ -158,6 +158,9 @@ export default function CheckoutForm({ returnError, prefill }: { returnError?: s
         <p className="mt-3 flex justify-between border-t hairline pt-4 text-[15px] text-chalk">
           Total <span className="font-mono tabular-nums">{formatPrice(subtotal - saving + shipping)}</span>
         </p>
+        {saving + mrpSavingFor(lines) > 0 && (
+          <p className="mt-2 text-[14px] text-jade">You save {formatPrice(saving + mrpSavingFor(lines))} on this order</p>
+        )}
         <p className="mt-2 text-[13px] text-dim">Prices include GST.</p>
       </aside>
     </div>

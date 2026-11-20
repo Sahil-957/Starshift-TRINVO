@@ -275,6 +275,13 @@ export function getProduct(slug: string): Product | undefined {
 
 export const formatPrice = (value: number) => `₹${value.toLocaleString("en-IN")}`;
 
+/** Whole % below the MRP (the admin's "compare at"), rounded down so it never overstates; 0 when there is none. */
+export const percentOff = (p: Product) => (p.compareAt && p.compareAt > p.price ? Math.floor((1 - p.price / p.compareAt) * 100) : 0);
+
+/** What these lines save against the MRP (each design's "compare at"). */
+export const mrpSavingFor = (lines: { product: Product; quantity: number }[]) =>
+  lines.reduce((s, l) => s + Math.max(0, (l.product.compareAt ?? 0) - l.product.price) * l.quantity, 0);
+
 /**
  * The shipping rule checkout applies, in rupees: synced from the admin's Settings,
  * or the storefront's own figures when it isn't connected. Same maths as the

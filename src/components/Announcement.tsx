@@ -1,6 +1,7 @@
 "use client";
 
-import { LAUNCH_LAST_DAY, useLaunchLive, useOfferLine } from "./Launch";
+import Link from "next/link";
+import { countdown, LAUNCH_LAST_DAY, LAUNCH_PRICE_LINE, useLaunchLeft, useOfferLine } from "./Launch";
 import { shippingPromise } from "@/data/products";
 
 const notes = [
@@ -10,18 +11,29 @@ const notes = [
   { text: "Double-wall stainless", color: "var(--color-bronze)" },
 ];
 
-/** Hairline ticker above the header. Track is doubled so the loop is seamless. */
+/**
+ * Launch week: a solid bar with the countdown and the offer, linking to the
+ * shop. After it: the hairline ticker (track doubled so the loop is seamless).
+ */
 export default function Announcement() {
+  const left = useLaunchLeft();
   const offer = useOfferLine();
-  const launch = useLaunchLive()
-    ? [
-        { text: `Launch week · ends ${LAUNCH_LAST_DAY}`, color: "var(--color-plum)" },
-        ...(offer ? [{ text: `${offer} · mix any designs`, color: "var(--color-jade)" }] : []),
-      ]
-    : [];
-  const all = [...launch, ...notes];
-  const track = [...all, ...all];
 
+  if (left !== 0) {
+    return (
+      <Link href="/shop" className="relative z-50 block bg-bronze px-4 py-2.5 text-center text-void hover:bg-chalk">
+        <span className="label inline-flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 leading-normal">
+          <span className="whitespace-nowrap">
+            <b className="font-bold">Launch week</b> · <span className="tabular-nums">{left === null ? `ends ${LAUNCH_LAST_DAY}` : `ends in ${countdown(left)}`}</span>
+          </span>
+          <span className="whitespace-nowrap">{offer ?? LAUNCH_PRICE_LINE}</span>
+          <span className="hidden whitespace-nowrap underline underline-offset-4 sm:inline">Shop now →</span>
+        </span>
+      </Link>
+    );
+  }
+
+  const track = [...notes, ...notes];
   return (
     <div className="relative z-50 overflow-hidden border-b hairline bg-void py-2.5">
       <div className="flex w-max animate-drift gap-12 pr-12">
