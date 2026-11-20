@@ -159,6 +159,17 @@ export function listOrders(
   }>(c, `/api/order/list?${qs}`);
 }
 
+/**
+ * One order, by the order_id Create Order returned. Uses /api/order (documented as
+ * still supported) because the sandbox has no /api/order/list, and asking for
+ * several at once (`ids`) crashes on Qikink's side (Nov 2026: "whereIn() expects
+ * $values to be of type array"). The legacy route answers with a bare array.
+ */
+export async function getOrder(id: string, c: QikinkCreds = envCreds()): Promise<QikinkOrder | null> {
+  const r = await call<QikinkOrder[] | { data?: QikinkOrder[] }>(c, `/api/order?id=${encodeURIComponent(id)}`);
+  return (Array.isArray(r) ? r : (r.data ?? [])).find((o) => String(o.order_id) === id) ?? null;
+}
+
 /** Qikink's many statuses, folded into ours. Unknown ones leave the order as it is. */
 export function mapStatus(s: string): "in_production" | "shipped" | "delivered" | "cancelled" | "returned" | null {
   const v = s.trim().toLowerCase();

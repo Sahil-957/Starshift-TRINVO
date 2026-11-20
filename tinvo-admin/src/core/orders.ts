@@ -418,13 +418,13 @@ async function runSync(shopId: string) {
       ),
   );
   let updated = 0;
-  try {
-    for (let i = 0; i < open.length; i += 10) {
-      const batch = open.slice(i, i + 10);
-      const { data } = await qikink.listOrders({ ids: batch.map((o) => o.supplierOrderId).join(",") }, creds);
-      for (const q of data) {
-        const o = batch.find((b) => b.supplierOrderId === String(q.order_id));
-        if (!o) continue;
+  const failed: string[] = [];
+  // one request per order (see qikink.getOrder); one order failing doesn't hold up the rest.
+  // ponytail: sequential, fine for a few hundred open orders every 30 minutes
+  for (const o of open) {
+    try {
+      const q = await qikink.getOrder(o.supplierOrderId!, creds);
+      if (q) {
         const next = qikink.mapStatus(q.status) ?? o.status;
         await withShop(shopId, async (tx) => {
           await tx
@@ -448,11 +448,12 @@ async function runSync(shopId: string) {
         if (next === "shipped" && o.status !== "shipped") await notifyShipped(shopId, o.id);
         updated++;
       }
+    } catch (e) {
+      failed.push(`${o.number}: ${(e as Error).message}`);
     }
-    return { checked: open.length, updated, error: null };
-  } catch (e) {
-    return { checked: open.length, updated, error: (e as Error).message };
   }
+  const error = failed.length ? `${failed.length} of ${open.length} orders failed. ${failed[0]}` : null;
+  return { checked: open.length, updated, error };
 }
 
 // ─── refunds and cancellation ───────────────────────────────────────────────

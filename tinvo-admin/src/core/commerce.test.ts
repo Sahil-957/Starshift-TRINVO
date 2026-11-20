@@ -261,6 +261,12 @@ describe("checkout to delivery (PayU)", () => {
     assert.equal(o.status, "in_production", o.fulfilmentError ?? "");
   });
 
+  it("reads each sent order's status back from Qikink, one at a time", async () => {
+    const r = await syncShop(shopId);
+    assert.equal(r.error, null);
+    assert.ok(r.checked >= 1 && r.updated === r.checked, `${r.updated} of ${r.checked} orders read back`);
+  });
+
   it("cancels only unpaid orders", async () => {
     const third = await createCheckout(shopId, { items: [{ slug: "cocoa", quantity: 1 }], customer, address }, back);
     const o = await orderNo(third.orderNumber);
