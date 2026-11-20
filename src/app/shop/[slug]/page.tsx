@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import AddToCart, { BuyNowButton } from "@/components/AddToCart";
 import DesignPicker from "@/components/DesignPicker";
+import { OfferNote, Price } from "@/components/Launch";
 import { checkoutEnabled } from "@/lib/admin-api";
 import ProductGallery from "@/components/ProductGallery";
 import ReturnsSummary from "@/components/ReturnsSummary";
@@ -89,12 +90,13 @@ export default async function ProductPage({ params }: PageProps<"/shop/[slug]">)
 
           <div className="mt-6 flex items-baseline gap-4">
             <p className="font-mono text-3xl tracking-tight tabular-nums text-chalk">
-              {formatPrice(product.price)}
+              <Price product={product} large />
             </p>
             <p className="label text-dim">
               {barrel.capacity} · {barrel.capacityMl} ml
             </p>
           </div>
+          <OfferNote accent={product.accent} />
 
           <div className="mt-9">
             <DesignPicker current={product} />

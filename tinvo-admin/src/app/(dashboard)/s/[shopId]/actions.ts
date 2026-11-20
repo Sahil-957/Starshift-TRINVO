@@ -214,6 +214,18 @@ export async function shopDetailsAction(shopId: string, _: FormState, form: Form
   return r;
 }
 
+/** The offer fields: "2 save", "3+ save" (₹) and an end time in IST; off when both savings are empty. */
+function multiBuyFrom(form: FormData) {
+  const tiers = [
+    { minQty: 2, offMinor: rupees(f(form, "save2")) },
+    { minQty: 3, offMinor: rupees(f(form, "save3")) },
+  ].filter((t): t is { minQty: number; offMinor: number } => !!t.offMinor);
+  const ends = f(form, "offerEnds").trim();
+  if (!tiers.length) return null;
+  if (!ends) throw new CheckoutError("Pick when the multi-buy offer ends.");
+  return { tiers, endsAt: `${ends.length === 16 ? `${ends}:00` : ends}+05:30` };
+}
+
 export async function checkoutSettingsAction(shopId: string, _: FormState, form: FormData): Promise<FormState> {
   await requireShop(shopId, "manage");
   return attempt(() =>
@@ -223,6 +235,7 @@ export async function checkoutSettingsAction(shopId: string, _: FormState, form:
         shippingFlatMinor: rupees(f(form, "shipping")) ?? 0,
         freeShippingOverMinor: rupees(f(form, "freeOver")),
         storefrontDeployHook: f(form, "deployHook").trim() || null,
+        multiBuy: multiBuyFrom(form),
       }),
     ),
   );

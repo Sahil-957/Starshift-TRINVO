@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useCartLines } from "../cart/view";
 import { STATES } from "@/data/india";
-import { formatPrice, shippingFor } from "@/data/products";
+import { formatPrice, multiBuyFor, shippingFor } from "@/data/products";
 
 /** Sends the browser to PayU's payment page with the admin-signed fields. */
 function goToPayu(action: string, fields: Record<string, string>) {
@@ -40,6 +40,8 @@ export default function CheckoutForm({ returnError, prefill }: { returnError?: s
   const [error, setError] = useState<string | null>(returnError ?? null);
   const [busy, setBusy] = useState(false);
   const subtotal = lines.reduce((s, l) => s + l.product.price * l.quantity, 0);
+  const { saving } = multiBuyFor(lines.reduce((s, l) => s + l.quantity, 0));
+  const shipping = shippingFor(subtotal - saving);
 
   if (lines.length === 0) {
     return (
@@ -145,11 +147,16 @@ export default function CheckoutForm({ returnError, prefill }: { returnError?: s
         <p className="mt-5 flex justify-between border-t hairline pt-4 text-[14px] text-ash">
           Subtotal <span className="font-mono tabular-nums">{formatPrice(subtotal)}</span>
         </p>
+        {saving > 0 && (
+          <p className="mt-2 flex justify-between text-[14px] text-jade">
+            Multi-buy saving <span className="font-mono tabular-nums">−{formatPrice(saving)}</span>
+          </p>
+        )}
         <p className="mt-2 flex justify-between text-[14px] text-ash">
-          Shipping <span className="font-mono tabular-nums">{shippingFor(subtotal) ? formatPrice(shippingFor(subtotal)) : "Free"}</span>
+          Shipping <span className="font-mono tabular-nums">{shipping ? formatPrice(shipping) : "Free"}</span>
         </p>
         <p className="mt-3 flex justify-between border-t hairline pt-4 text-[15px] text-chalk">
-          Total <span className="font-mono tabular-nums">{formatPrice(subtotal + shippingFor(subtotal))}</span>
+          Total <span className="font-mono tabular-nums">{formatPrice(subtotal - saving + shipping)}</span>
         </p>
         <p className="mt-2 text-[13px] text-dim">Prices include GST.</p>
       </aside>

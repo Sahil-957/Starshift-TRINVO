@@ -72,6 +72,7 @@ export const notifyPaid = (shopId: string, orderId: string) =>
         number: o.number,
         items: d.items,
         subtotal: d.money(o.subtotalMinor),
+        discount: o.discountMinor ? d.money(o.discountMinor) : null,
         shipping: o.shippingMinor ? d.money(o.shippingMinor) : "Free",
         total: d.money(o.totalMinor),
         address: d.address,

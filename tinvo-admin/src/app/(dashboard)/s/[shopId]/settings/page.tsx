@@ -19,6 +19,8 @@ import { STATES } from "@/lib/india";
 export const metadata: Metadata = { title: "Settings" };
 
 const rupees = (m: number | null) => (m == null ? "" : String(m / 100));
+/** An ISO time as the "YYYY-MM-DDTHH:mm" a datetime-local field shows, in IST */
+const istLocal = (iso: string | undefined) => (iso ? new Date(Date.parse(iso) + 330 * 60_000).toISOString().slice(0, 16) : "");
 
 function Section({ id, title, children }: { id?: string; title: string; children: React.ReactNode }) {
   return (
@@ -87,6 +89,21 @@ export default async function SettingsPage({ params }: PageProps<"/s/[shopId]/se
           <Field label="Free shipping over (₹)" hint="Leave empty for never">
             <input name="freeOver" inputMode="decimal" defaultValue={rupees(checkout.freeShippingOverMinor)} className="field" />
           </Field>
+          <div className="grid gap-5 border-t hairline pt-5 sm:col-span-2 sm:grid-cols-3">
+            <p className="text-[13px] text-dim sm:col-span-3">
+              Multi-buy offer: the saving comes off at checkout, mixing designs. Leave both savings empty to switch it off.
+              The shop shows changes after the next publish.
+            </p>
+            <Field label="Buy 2, save (₹)">
+              <input name="save2" inputMode="decimal" defaultValue={rupees(checkout.multiBuy?.tiers.find((t) => t.minQty === 2)?.offMinor ?? null)} className="field" />
+            </Field>
+            <Field label="Buy 3 or more, save (₹)">
+              <input name="save3" inputMode="decimal" defaultValue={rupees(checkout.multiBuy?.tiers.find((t) => t.minQty === 3)?.offMinor ?? null)} className="field" />
+            </Field>
+            <Field label="Offer ends (IST)">
+              <input name="offerEnds" type="datetime-local" defaultValue={istLocal(checkout.multiBuy?.endsAt)} className="field" />
+            </Field>
+          </div>
           <div className="sm:col-span-2">
             <Field label="Storefront deploy hook" hint="Vercel → storefront project → Settings → Git → Deploy Hooks. Used by “Publish to storefront”.">
               <input name="deployHook" type="url" defaultValue={checkout.storefrontDeployHook ?? ""} className="field" />

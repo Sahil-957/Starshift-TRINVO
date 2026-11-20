@@ -4,6 +4,7 @@ import { z } from "zod";
 import { db, withShop } from "../db/index.ts";
 import { auditLogs, shopSettings, shops } from "../db/schema.ts";
 import { STATES } from "../lib/india.ts";
+import type { MultiBuy } from "./pricing.ts";
 
 export const getShop = async (shopId: string) => (await db.select().from(shops).where(eq(shops.id, shopId)))[0];
 
@@ -74,9 +75,11 @@ export type CheckoutSettings = {
   freeShippingOverMinor: number | null;
   /** Vercel deploy hook that rebuilds the storefront after catalogue edits */
   storefrontDeployHook: string | null;
+  /** "Buy 2 save X, buy 3 save Y" until a date; null when off */
+  multiBuy: MultiBuy | null;
 };
 
-const defaults: CheckoutSettings = { shippingFlatMinor: 0, freeShippingOverMinor: null, storefrontDeployHook: null };
+const defaults: CheckoutSettings = { shippingFlatMinor: 0, freeShippingOverMinor: null, storefrontDeployHook: null, multiBuy: null };
 const keys = Object.keys(defaults) as (keyof CheckoutSettings)[];
 
 export async function getCheckoutSettings(shopId: string): Promise<CheckoutSettings> {
@@ -93,6 +96,15 @@ export const checkoutSettingsInput = z.object({
   shippingFlatMinor: z.number().int().min(0).max(1_000_000),
   freeShippingOverMinor: z.number().int().min(0).nullable(),
   storefrontDeployHook: z.url().startsWith("https://").nullable(),
+  multiBuy: z
+    .object({
+      tiers: z
+        .array(z.object({ minQty: z.number().int().min(2).max(10), offMinor: z.number().int().min(100).max(1_000_000) }))
+        .min(1)
+        .max(5),
+      endsAt: z.iso.datetime({ offset: true }),
+    })
+    .nullable(),
 });
 
 export async function setCheckoutSettings(shopId: string, input: CheckoutSettings) {

@@ -87,6 +87,8 @@ export function orderConfirmed(o: {
   number: string;
   items: EmailItem[];
   subtotal: string;
+  /** the multi-buy saving, when there was one */
+  discount?: string | null;
   shipping: string;
   total: string;
   address: string;
@@ -100,7 +102,7 @@ export function orderConfirmed(o: {
 ${p(`Your order <strong>${esc(o.number)}</strong> is paid and confirmed. Here's what you got:`)}
 ${itemsTable(o.items, base)}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:10px 0 0;">
-${totalRow("Subtotal", o.subtotal)}${totalRow("Shipping", o.shipping)}${totalRow("Total paid", o.total, true)}
+${totalRow("Subtotal", o.subtotal)}${o.discount ? totalRow("Multi-buy saving", `−${o.discount}`) : ""}${totalRow("Shipping", o.shipping)}${totalRow("Total paid", o.total, true)}
 </table>
 <div style="font-size:12px;color:${muted};margin-top:4px;">Prices include GST.</div>
 ${o.trackUrl ? button(o.trackUrl, "Track your order") : ""}
@@ -110,7 +112,7 @@ ${o.trackUrl ? button(o.trackUrl, "Track your order") : ""}
   });
   const text = `Thank you, ${o.firstName}!\n\nYour ${o.shop} order ${o.number} is paid and confirmed.\n\n${o.items
     .map((i) => `  ${i.title} x ${i.quantity}   ${i.lineTotal}`)
-    .join("\n")}\n\nSubtotal: ${o.subtotal}\nShipping: ${o.shipping}\nTotal paid: ${o.total} (GST included)\n\nShipping to: ${o.address}\n\nYour tumbler is printed for you, then shipped. We'll email you the tracking link when it's on its way.${
+    .join("\n")}\n\nSubtotal: ${o.subtotal}${o.discount ? `\nMulti-buy saving: −${o.discount}` : ""}\nShipping: ${o.shipping}\nTotal paid: ${o.total} (GST included)\n\nShipping to: ${o.address}\n\nYour tumbler is printed for you, then shipped. We'll email you the tracking link when it's on its way.${
     o.trackUrl ? `\n\nTrack your order: ${o.trackUrl}` : ""
   }\n\nQuestions? Just reply to this email.\n— ${o.shop}`;
   return { subject: `Your ${o.shop} order ${o.number} is confirmed`, html, text };

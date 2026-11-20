@@ -13,7 +13,7 @@ import { eq, sql } from "drizzle-orm";
 import nodemailer from "nodemailer";
 import pg from "pg";
 import { pool, withShop } from "../db/index.ts";
-import { orderEvents, orders } from "../db/schema.ts";
+import { orderEvents, orderItems, orders } from "../db/schema.ts";
 import { envCreds } from "../lib/qikink.ts";
 import { putFile } from "../lib/storage.ts";
 import { createApiKey, listApiKeys, revokeApiKey, shopForToken } from "./apikeys.ts";
@@ -40,7 +40,7 @@ import { emailOrderList } from "./notify.ts";
 import { shopReport } from "./reports.ts";
 import { listSubscribers, subscribe, unsubscribe } from "./subscribers.ts";
 import { listReviews, pendingReviewCount, publicName, publishedReviews, setReviewStatus, submitReview } from "./reviews.ts";
-import { getShopState, setCheckoutSettings, updateShopDetails } from "./settings.ts";
+import { checkoutSettingsInput, getShopState, setCheckoutSettings, updateShopDetails } from "./settings.ts";
 import { createShop } from "./shops.ts";
 import { createOwner } from "./users.ts";
 
@@ -101,7 +101,7 @@ before(async () => {
   shopId = (await createShop(owner, orgId, { name: "Shop", slug: `c-${run}`, settlementCurrency: "INR" })).id;
   bareShopId = (await createShop(owner, orgId, { name: "Bare", slug: `bare-${run}`, settlementCurrency: "INR" })).id;
   await updateShopDetails(owner, shopId, { name: "Shop", gstin: "27ABCDE1234F1Z5", originState: "MH", orderPrefix: "TST", primaryDomain: "" });
-  await setCheckoutSettings(shopId, { shippingFlatMinor: 9900, freeShippingOverMinor: 200000, storefrontDeployHook: null });
+  await setCheckoutSettings(shopId, { shippingFlatMinor: 9900, freeShippingOverMinor: 200000, storefrontDeployHook: null, multiBuy: null });
   await setCredentials(shopId, "payu", payu);
   await setCredentials(shopId, "qikink", envCreds());
 
@@ -486,5 +486,40 @@ describe("forms", () => {
   it("accepts an email with spaces around it at checkout (phone autocomplete)", () => {
     const r = checkoutInput.parse({ items: [{ slug: "cocoa", quantity: 1 }], customer: { ...customer, email: ` Buyer@Test.invalid ` }, address });
     assert.equal(r.customer.email, "buyer@test.invalid");
+  });
+});
+
+describe("multi-buy offer", () => {
+  const settings = { shippingFlatMinor: 9900, freeShippingOverMinor: 200000, storefrontDeployHook: null };
+
+  it("takes the saving off at checkout, charges the rest, and shows it in the email and on Qikink", async () => {
+    const endsAt = new Date(Date.now() + 3_600_000).toISOString();
+    await setCheckoutSettings(shopId, { ...settings, multiBuy: { tiers: [{ minQty: 2, offMinor: 20000 }, { minQty: 3, offMinor: 40000 }], endsAt } });
+    try {
+      const c = await createCheckout(shopId, { items: [{ slug: "cocoa", quantity: 2 }], customer, address }, back);
+      const o = await orderNo(c.orderNumber);
+      const [{ item }] = await withShop(shopId, (tx) => tx.select({ item: orderItems }).from(orderItems).where(eq(orderItems.orderId, o.id)));
+      assert.equal(o.subtotalMinor, 2 * item.unitPriceMinor);
+      assert.equal(o.discountMinor, 20000);
+      assert.equal(o.totalMinor, o.subtotalMinor - 20000 + o.shippingMinor);
+      assert.equal(c.payu.fields.amount, (o.totalMinor / 100).toFixed(2), "PayU charges what is left after the saving");
+      const one = await createCheckout(shopId, { items: [{ slug: "cocoa", quantity: 1 }], customer, address }, back);
+      assert.equal((await orderNo(one.orderNumber)).discountMinor, 0, "one tumbler: no saving");
+
+      const r = await payuReturn(shopId, payuReply(c.payu.fields, "success", c.payu.fields.amount, `77${run}`));
+      assert.equal(r.paid, true);
+      const paid = await orderNo(c.orderNumber);
+      assert.equal(paid.fulfilmentError, null, paid.fulfilmentError ?? "");
+      assert.match(paid.supplierOrderId ?? "", /^\d+$/, "the Qikink sandbox took the discounted line prices");
+      const mail = mails.find((m) => m.to === customer.email && m.subject.includes(c.orderNumber));
+      assert.match(mail?.text ?? "", /Multi-buy saving: −/);
+    } finally {
+      await setCheckoutSettings(shopId, { ...settings, multiBuy: null });
+    }
+  });
+
+  it("refuses an offer with nonsense in it", () => {
+    assert.throws(() => checkoutSettingsInput.parse({ ...settings, multiBuy: { tiers: [{ minQty: 1, offMinor: 20000 }], endsAt: "2026-11-27T00:00:00+05:30" } }));
+    assert.throws(() => checkoutSettingsInput.parse({ ...settings, multiBuy: { tiers: [{ minQty: 2, offMinor: 20000 }], endsAt: "next week" } }));
   });
 });

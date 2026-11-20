@@ -1,3 +1,6 @@
+"use client";
+
+import { LAUNCH_LAST_DAY, useLaunchLive, useOfferLine } from "./Launch";
 import { shippingPromise } from "@/data/products";
 
 const notes = [
@@ -9,7 +12,15 @@ const notes = [
 
 /** Hairline ticker above the header. Track is doubled so the loop is seamless. */
 export default function Announcement() {
-  const track = [...notes, ...notes];
+  const offer = useOfferLine();
+  const launch = useLaunchLive()
+    ? [
+        { text: `Launch week · ends ${LAUNCH_LAST_DAY}`, color: "var(--color-plum)" },
+        ...(offer ? [{ text: `${offer} · mix any designs`, color: "var(--color-jade)" }] : []),
+      ]
+    : [];
+  const all = [...launch, ...notes];
+  const track = [...all, ...all];
 
   return (
     <div className="relative z-50 overflow-hidden border-b hairline bg-void py-2.5">

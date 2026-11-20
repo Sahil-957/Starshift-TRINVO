@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import ProductFrame from "@/components/ProductFrame";
-import { formatPrice, getProduct, shippingFor } from "@/data/products";
+import { formatPrice, getProduct, multiBuyFor, shippingFor } from "@/data/products";
 import { cart, useCart } from "@/lib/cart";
 
 /** Lines with a product that is still on sale; anything else is dropped from view. */
@@ -15,6 +15,9 @@ export function useCartLines() {
 export default function CartView() {
   const lines = useCartLines();
   const subtotal = lines.reduce((s, l) => s + l.product.price * l.quantity, 0);
+  const quantity = lines.reduce((s, l) => s + l.quantity, 0);
+  const { saving, next } = multiBuyFor(quantity);
+  const shipping = shippingFor(subtotal - saving);
 
   if (lines.length === 0) {
     return (
@@ -57,13 +60,29 @@ export default function CartView() {
           </li>
         ))}
       </ul>
+      {next && (
+        <p className="mt-6 border hairline px-5 py-4 text-[14px] text-ash">
+          Add {next.minQty - quantity} more {next.minQty - quantity === 1 ? "tumbler" : "tumblers"} (mix any designs) and{" "}
+          {saving > 0 ? "your saving goes up to" : "save"} <span className="text-chalk">{formatPrice(next.off)}</span>.{" "}
+          <Link href="/shop" className="text-chalk underline underline-offset-4">
+            Pick another
+          </Link>
+        </p>
+      )}
       <div className="mt-8 flex flex-wrap items-center justify-between gap-6">
         <div>
+          {saving > 0 && (
+            <p className="mb-1 text-[14px] text-ash">
+              Subtotal <span className="ml-2 font-mono">{formatPrice(subtotal)}</span>
+              <span className="ml-4 text-jade">Multi-buy saving −{formatPrice(saving)}</span>
+            </p>
+          )}
           <p className="text-[15px] text-ash">
-            Subtotal <span className="ml-3 font-mono text-xl text-chalk">{formatPrice(subtotal)}</span>
+            {saving > 0 ? "Total" : "Subtotal"}{" "}
+            <span className="ml-3 font-mono text-xl text-chalk">{formatPrice(subtotal - saving + shipping)}</span>
           </p>
           <p className="mt-1 text-[13px] text-dim">
-            Shipping {shippingFor(subtotal) ? formatPrice(shippingFor(subtotal)) : "free"} · Prices include GST.
+            Shipping {shipping ? formatPrice(shipping) : "free"} · Prices include GST.
           </p>
         </div>
         <Link href="/checkout" className="label bg-chalk px-10 py-4 text-void hover:bg-bronze">

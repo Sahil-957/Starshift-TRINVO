@@ -3,7 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRef, useState } from "react";
-import { barrel, formatPrice, products } from "@/data/products";
+import { countdown, LAUNCH_LAST_DAY, useLaunchLeft, useOfferLine } from "./Launch";
+import { barrel, formatPrice, products, shippingPromise } from "@/data/products";
 
 /** Where each part sits in the 4:5 studio render, in % of the frame. */
 const callouts = [
@@ -32,6 +33,8 @@ export default function Hero() {
   const [active, setActive] = useState(0);
   const [auto, setAuto] = useState(true);
   const lead = products[active];
+  const launchLeft = useLaunchLeft();
+  const offer = useOfferLine();
 
   /** Written straight to CSS custom properties — no re-render per frame. */
   const track = (event: React.MouseEvent) => {
@@ -81,9 +84,21 @@ export default function Hero() {
         {/* phones: headline, then the tumbler, then the pitch; desktop: text left, tumbler right */}
         <div className="contents lg:order-1 lg:block">
           <div className="order-1">
-          <p className="label animate-sweep text-ash">
-            {products.length} designs · one {barrel.capacity} barrel
-          </p>
+          {launchLeft === 0 ? (
+            <p className="label animate-sweep text-ash">
+              {products.length} designs · one {barrel.capacity} barrel
+            </p>
+          ) : (
+            <p className="label animate-sweep text-ash">
+              <span className="transition-colors duration-700" style={{ color: lead.accent }}>
+                Launch week
+              </span>
+              {" · "}
+              <span className="tabular-nums">
+                {launchLeft === null ? `ends ${LAUNCH_LAST_DAY}` : `ends in ${countdown(launchLeft)}`}
+              </span>
+            </p>
+          )}
 
           <h1 className="display mt-6 animate-cut text-[clamp(2.75rem,7vw,6rem)] text-chalk">
             Make every
@@ -101,6 +116,12 @@ export default function Hero() {
             straw in the box, with the design printed all the way round. Not just
             another tumbler.
           </p>
+
+          {offer && (
+            <p className="label mt-6 transition-colors duration-700" style={{ color: lead.accent }}>
+              {offer} · {shippingPromise}
+            </p>
+          )}
 
           <div className="mt-9 flex flex-wrap items-center gap-3">
             <Link

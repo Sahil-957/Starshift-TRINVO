@@ -54,7 +54,7 @@ export default function ProductFrame({
 
       {image?.kind === "photo" && (
         <span className="label absolute left-3 top-3 z-[2] hidden bg-void/70 px-2.5 py-1.5 text-[10px] text-chalk backdrop-blur @min-[14rem]:block">
-          Real photo · unretouched
+          Real photo · our first batch
         </span>
       )}
 

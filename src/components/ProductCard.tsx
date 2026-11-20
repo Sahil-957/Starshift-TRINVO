@@ -1,7 +1,8 @@
 import Link from "next/link";
 import ProductFrame from "./ProductFrame";
 import Swatches from "./Swatches";
-import { barrel, formatPrice, type Product } from "@/data/products";
+import { LaunchTag, Price } from "./Launch";
+import { barrel, type Product } from "@/data/products";
 
 export default function ProductCard({
   product,
@@ -41,11 +42,12 @@ export default function ProductCard({
       <div className="mt-5 flex items-baseline justify-between gap-4 border-t hairline pt-4">
         <h3 className="display text-xl text-chalk">{product.name}</h3>
         <span className="label tabular-nums text-ash">
-          {formatPrice(product.price)}
+          <Price product={product} />
         </span>
       </div>
       <p className="mt-2 text-[14px] leading-snug text-ash">{product.tagline}</p>
       <p className="label mt-3 text-dim">
+        <LaunchTag accent={product.accent} />
         {product.finish} · {barrel.capacity}
       </p>
     </Link>

@@ -55,6 +55,8 @@ export type Product = {
   /** Editorial paragraph for the product page */
   description: string;
   price: number;
+  /** The regular price while a lower one is on (the admin's "compare at"); shown struck through */
+  compareAt?: number;
   /** Shots for this product; the first is the lead image */
   images: ProductImage[];
   /** Tints the key light behind the product so each frame is lit differently */
@@ -240,8 +242,12 @@ const baseProducts: Product[] = [
  * images, colours and quiz traits stay here. Empty `{}` means "not connected".
  */
 type Synced = {
-  products?: Record<string, { name: string; tagline: string; description: string; priceMinor: number }>;
+  products?: Record<
+    string,
+    { name: string; tagline: string; description: string; priceMinor: number; compareAtMinor?: number | null }
+  >;
   shipping?: { flatMinor: number; freeOverMinor: number | null };
+  multiBuy?: { tiers: { minQty: number; offMinor: number }[]; endsAt: string } | null;
 };
 const admin = (synced as Synced).products;
 
@@ -256,6 +262,7 @@ export const products: Product[] = admin
           tagline: a.tagline || p.tagline,
           description: a.description || p.description,
           price: a.priceMinor / 100,
+          compareAt: a.compareAtMinor ? a.compareAtMinor / 100 : undefined,
         };
       })
   : baseProducts;
@@ -277,6 +284,28 @@ const rule = (synced as Synced).shipping;
 export const shipping = rule
   ? { flat: rule.flatMinor / 100, freeOver: rule.freeOverMinor === null ? null : rule.freeOverMinor / 100 }
   : { flat: 79, freeOver: 1999 as number | null };
+
+/**
+ * "Buy 2 save ₹200, buy 3 save ₹400" from the admin, in rupees, or null when off.
+ * Checkout (the admin's pricing.ts) is what actually applies it; this mirrors it for display.
+ */
+const offer = (synced as Synced).multiBuy;
+export const multiBuy = offer
+  ? { tiers: offer.tiers.map((t) => ({ minQty: t.minQty, off: t.offMinor / 100 })).sort((a, b) => a.minQty - b.minQty), endsAt: Date.parse(offer.endsAt) }
+  : null;
+
+/** The saving on `quantity` tumblers right now (mixing designs), and the next tier up if there is one. */
+export function multiBuyFor(quantity: number, now = Date.now()) {
+  if (!multiBuy || now >= multiBuy.endsAt) return { saving: 0, next: null };
+  const reached = multiBuy.tiers.filter((t) => quantity >= t.minQty);
+  const next = multiBuy.tiers.find((t) => quantity < t.minQty) ?? null;
+  return { saving: Math.max(0, ...reached.map((t) => t.off)), next };
+}
+
+/** "Buy 2, save ₹200 · Buy 3, save ₹400" */
+export const multiBuyLine = multiBuy?.tiers
+  .map((t, i) => `Buy ${t.minQty}${i === multiBuy.tiers.length - 1 && i > 0 ? "+" : ""}, save ${formatPrice(t.off)}`)
+  .join(" · ");
 
 export const shippingFor = (subtotal: number) =>
   shipping.flat === 0 || (shipping.freeOver !== null && subtotal >= shipping.freeOver) ? 0 : shipping.flat;

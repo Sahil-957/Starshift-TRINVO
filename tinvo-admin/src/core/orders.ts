@@ -27,7 +27,7 @@ import * as qikink from "../lib/qikink.ts";
 import * as payu from "../lib/payu.ts";
 import { signedUrl } from "../lib/storage.ts";
 import { getCredentials } from "./credentials.ts";
-import { priceOrder } from "./pricing.ts";
+import { apportion, priceOrder } from "./pricing.ts";
 import { notifyFulfilmentFailed, notifyPaid, notifyShipped, notifySyncFailing } from "./notify.ts";
 import { getCheckoutSettings, getShopState, setShopState } from "./settings.ts";
 
@@ -102,6 +102,8 @@ export async function createCheckout(shopId: string, raw: CheckoutInput, payuRet
     gstin: shop.gstin,
     originState: shop.originState,
     destinationState: input.address.state,
+    multiBuy: settings.multiBuy,
+    now: new Date(),
   });
 
   // per-shop sequence: TNV-1001, TNV-1002…
@@ -124,6 +126,7 @@ export async function createCheckout(shopId: string, raw: CheckoutInput, payuRet
         shippingAddress: { ...input.address, country: "IN" } satisfies ShippingAddress,
         currency: shop.settlementCurrency,
         subtotalMinor: totals.subtotalMinor,
+        discountMinor: totals.discountMinor,
         shippingMinor: totals.shippingMinor,
         taxMinor: totals.taxMinor,
         totalMinor: totals.totalMinor,
@@ -266,9 +269,11 @@ export async function fulfil(shopId: string, orderId: string) {
 
   try {
     const lineItems: qikink.LineItem[] = [];
-    for (const { item, product: p } of lines) {
+    const off = apportion(order.discountMinor, lines.map(({ item }) => item.unitPriceMinor * item.quantity));
+    for (const [i, { item, product: p }] of lines.entries()) {
       if (!p?.supplierSku) throw new Error(`${item.title} has no supplier SKU (edit the product)`);
-      const price = String(item.unitPriceMinor / 100);
+      // what one unit really sold for, after its share of any multi-buy saving
+      const price = ((item.unitPriceMinor * item.quantity - off[i]) / item.quantity / 100).toFixed(2).replace(/\.00$/, "");
       if (p.printFileKey) {
         if (!p.designCode || !p.printTypeId || !p.mockupUrl || !p.printWidthIn || !p.printHeightIn) {
           throw new Error(`${item.title} needs design code, print type, size and mockup URL`);
