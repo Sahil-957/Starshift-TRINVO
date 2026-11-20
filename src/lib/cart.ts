@@ -1,6 +1,8 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { getProduct } from "@/data/products";
+import { track } from "./pixel";
 
 /**
  * The cart: slugs and quantities in localStorage, shared across tabs. Prices
@@ -60,6 +62,8 @@ export const cart = {
         ? lines.map((l) => (l.slug === slug ? { ...l, quantity: Math.min(10, l.quantity + quantity) } : l))
         : [...lines, { slug, quantity }],
     );
+    const price = getProduct(slug)?.price ?? 0;
+    track("AddToCart", { content_ids: [slug], content_type: "product", value: price * quantity, currency: "INR" });
   },
   set(slug: string, quantity: number) {
     write(

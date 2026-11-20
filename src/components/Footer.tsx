@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { checkoutEnabled } from "@/lib/admin-api";
+import { CookieChoices } from "./Pixel";
 
 const columns = [
   {
@@ -81,7 +82,10 @@ export default function Footer() {
 
         <div className="mt-20 flex flex-col gap-4 border-t hairline pt-7 sm:flex-row sm:items-center sm:justify-between">
           <p className="label text-dim">© {new Date().getFullYear()} TINVO</p>
-          <p className="label text-dim">Printed to order · India</p>
+          <div className="flex flex-wrap items-center gap-6">
+            <CookieChoices />
+            <p className="label text-dim">Printed to order · India</p>
+          </div>
         </div>
       </div>
     </footer>

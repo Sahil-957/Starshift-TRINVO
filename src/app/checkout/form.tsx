@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { track } from "@/lib/pixel";
 import { useCartLines } from "../cart/view";
 import { STATES } from "@/data/india";
 import { formatPrice, multiBuyFor, shippingFor, mrpSavingFor } from "@/data/products";
@@ -42,6 +43,18 @@ export default function CheckoutForm({ returnError, prefill }: { returnError?: s
   const subtotal = lines.reduce((s, l) => s + l.product.price * l.quantity, 0);
   const { saving } = multiBuyFor(lines.reduce((s, l) => s + l.quantity, 0));
   const shipping = shippingFor(subtotal - saving);
+  const counted = useRef(false);
+  useEffect(() => {
+    if (counted.current || !lines.length) return;
+    counted.current = true;
+    track("InitiateCheckout", {
+      value: subtotal - saving + shipping,
+      currency: "INR",
+      content_type: "product",
+      content_ids: lines.map((l) => l.slug),
+      num_items: lines.reduce((s, l) => s + l.quantity, 0),
+    });
+  }, [lines, subtotal, saving, shipping]);
 
   if (lines.length === 0) {
     return (

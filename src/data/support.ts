@@ -6,6 +6,7 @@
  * renders a visible notice. Shipping charges come from the admin (see `shipping`).
  */
 import { formatPrice, shipping } from "./products";
+import { PIXEL_ID } from "@/lib/pixel";
 
 const shippingRows: [string, string][] =
   shipping.flat === 0
@@ -380,7 +381,7 @@ export const supportPages: SupportPage[] = [
     slug: "privacy",
     label: "Privacy policy",
     title: "Your data, plainly",
-    lede: "What we collect, why, who we share it with and how to have it changed or deleted. Last updated 9 November 2026.",
+    lede: `What we collect, why, who we share it with and how to have it changed or deleted. Last updated ${PIXEL_ID ? "20" : "9"} November 2026.`,
     summary: "What we collect, who we share it with and your rights.",
     accent: "var(--color-jade)",
     sections: [
@@ -398,24 +399,32 @@ export const supportPages: SupportPage[] = [
           ["If you create an account", "Name, email and a password stored only as a one-way hash, or your name and email from Google if you sign in with Google. Used to show your orders and fill in checkout."],
           ["If you write a review", "Your rating, review, and first name with last initial (shown publicly once we approve it). We check it against your order but never publish the order or your email."],
           ["If you join the drop list", "Your email, to tell you about new designs. Reply to any of those emails to come off it."],
-          ["When you browse", "Basic server logs (address, browser, pages, time) kept briefly for security and fixing faults. We use no advertising or analytics trackers."],
+          [
+            "When you browse",
+            PIXEL_ID
+              ? "Basic server logs (address, browser, pages, time) kept briefly for security and fixing faults. We also use the Meta Pixel to measure our Facebook and Instagram ads: it tells Meta which pages you view, what you add to your cart and what you buy (designs, amount, order number), with your browser details and IP address."
+              : "Basic server logs (address, browser, pages, time) kept briefly for security and fixing faults. We use no advertising or analytics trackers.",
+          ],
         ],
       },
       {
         heading: "Cookies and storage",
         body: [
-          "We use one cookie when you're signed in, to keep you signed in (30 days), and a short-lived one during Google sign-in. Your cart is saved in your own browser. There are no advertising, tracking or third-party analytics cookies.",
+          PIXEL_ID
+            ? "We use one cookie when you're signed in, to keep you signed in (30 days), and a short-lived one during Google sign-in. Your cart is saved in your own browser. The Meta Pixel sets advertising cookies (_fbp, and _fbc when you arrive from an ad) for up to 90 days to measure our ads. To turn them off, choose Turn off on our cookie notice, or Cookie choices at the foot of any page; that stops the Pixel and deletes its cookies. You can also block them in your browser or with an ad blocker, and choose how Meta uses your activity in your Facebook or Instagram ad settings."
+            : "We use one cookie when you're signed in, to keep you signed in (30 days), and a short-lived one during Google sign-in. Your cart is saved in your own browser. There are no advertising, tracking or third-party analytics cookies.",
         ],
       },
       {
         heading: "Who we share it with",
-        body: ["Only the services needed to run the shop, each only with what it needs. We never sell your data or share it for advertising."],
+        body: [PIXEL_ID ? "Only the services needed to run and advertise the shop, each only with what it needs. We never sell your data." : "Only the services needed to run the shop, each only with what it needs. We never sell your data or share it for advertising."],
         rows: [
           ["PayU", "Takes your payment."],
           ["Qikink", "Prints and ships your tumbler: receives your name, phone, address and the design."],
           ["Courier partners", "Deliver the parcel, via Qikink: name, phone and address."],
           ["Google", "Hosts our servers (Google Cloud, India) and sends our emails (Gmail); handles sign-in if you choose Continue with Google."],
           ["Neon", "Hosts our database (in Singapore)."],
+          ...(PIXEL_ID ? [["Meta", "Measures our Facebook and Instagram ads through the Meta Pixel: pages viewed, cart and purchase events, browser details and IP address."] as [string, string]] : []),
         ],
         points: ["We may also disclose data where Indian law requires it, for example to tax authorities or under a court order."],
       },

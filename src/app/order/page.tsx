@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { adminFetch, checkoutEnabled } from "@/lib/admin-api";
 import ClearCart from "./clear-cart";
+import { PixelPurchase } from "@/components/Pixel";
 import Link from "next/link";
 import { currentAccount } from "@/lib/account";
 import { EmailMyOrders } from "./email-orders";
@@ -38,6 +39,7 @@ export default async function OrderPage({ searchParams }: PageProps<"/order">) {
           {q.placed && order.status !== "pending_payment" && (
             <>
               <ClearCart />
+              <PixelPurchase number={order.number} value={order.totalMinor / 100} items={order.items} />
               <p className="mb-2 border border-jade/40 bg-jade/5 p-5 text-[15px] text-chalk">
                 Thank you! Your order is placed and paid. Keep your order number: you can track it on this page any time.
               </p>

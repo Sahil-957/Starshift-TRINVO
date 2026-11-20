@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Announcement from "@/components/Announcement";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
+import { CookieNotice, PixelPageViews } from "@/components/Pixel";
 import { checkoutEnabled } from "@/lib/admin-api";
 import { SITE } from "@/lib/site";
 import "./globals.css";
@@ -44,10 +45,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${sans.variable} ${mono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-void">
+        <PixelPageViews />
         <Announcement />
         <Nav checkout={checkoutEnabled} />
         <main className="flex-1">{children}</main>
         <Footer />
+        <CookieNotice />
       </body>
     </html>
   );

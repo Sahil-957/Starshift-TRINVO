@@ -9,6 +9,7 @@ import ProductGallery from "@/components/ProductGallery";
 import ReturnsSummary from "@/components/ReturnsSummary";
 import ProductReviews, { RatingSummary } from "@/components/ProductReviews";
 import ProductCard from "@/components/ProductCard";
+import { PixelViewContent } from "@/components/Pixel";
 import { getPolicy } from "@/data/policy";
 import { barrel, formatPrice, getProduct, goodToKnow, products } from "@/data/products";
 
@@ -87,6 +88,7 @@ export default async function ProductPage({ params }: PageProps<"/shop/[slug]">)
           </h1>
           <p className="mt-3 text-[16px] text-ash">{product.tagline}</p>
           <RatingSummary slug={product.slug} accent={product.accent} />
+          <PixelViewContent slug={product.slug} name={product.name} price={product.price} />
 
           <div className="mt-6 flex items-baseline gap-4">
             <p className="font-mono text-3xl tracking-tight tabular-nums text-chalk">
