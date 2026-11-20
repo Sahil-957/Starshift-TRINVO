@@ -27,21 +27,22 @@ import bpy
 from mathutils import Vector
 
 ROOT = Path(__file__).resolve().parent.parent
-SRC = ROOT / "resized" / "With Logo"
+SRC = ROOT / "resized"
 OUT = ROOT / "public" / "products"
 
-# slug -> (wrap file, logo centre u on the wrap, backdrop glow colour)
+# slug -> (wrap file, logo centre u on the wrap, backdrop glow colour). These
+# are the files Qikink prints from; the 3 foils don't tile, so their seam shows.
 DESIGNS = {
-    "aurora-gilt": ("Golden Foil.png", 0.776, "#c9a24a"),
-    "chroma-tide": ("blue foil.png", 0.773, "#8fb4d0"),
-    "opal-drift": ("Pink Foil.png", 0.684, "#d29ae0"),
-    "midnight-slate": ("Navy Blue.png", 0.688, "#6f86c4"),
-    "cloud-theory": ("Sky Blue.png", 0.684, "#9cb8d4"),
-    "pink-serenity": ("Baby Pink.png", 0.688, "#da9191"),
-    "solara": ("Cream.png", 0.684, "#e8cf8a"),
-    "mauve-mode": ("Purple.png", 0.688, "#b07a96"),
-    "cocoa-noir": ("Voilet.png", 0.688, "#b08470"),
-    "olive-dusk": ("Brown.png", 0.684, "#a59a72"),
+    "aurora-gilt": ("With Logo/Golden Foil.png", 0.776, "#c9a24a"),
+    "chroma-tide": ("With Logo/blue foil.png", 0.773, "#8fb4d0"),
+    "opal-drift": ("With Logo/Pink Foil.png", 0.684, "#d29ae0"),
+    "midnight-slate": ("With Logo/Navy Blue.png", 0.688, "#6f86c4"),
+    "cloud-theory": ("With Logo/Sky Blue.png", 0.684, "#9cb8d4"),
+    "pink-serenity": ("With Logo/Baby Pink.png", 0.688, "#da9191"),
+    "solara": ("With Logo/Cream.png", 0.684, "#e8cf8a"),
+    "mauve-mode": ("With Logo/Purple.png", 0.688, "#b07a96"),
+    "cocoa-noir": ("With Logo/Voilet.png", 0.688, "#b08470"),
+    "olive-dusk": ("With Logo/Brown.png", 0.684, "#a59a72"),
 }
 
 # --- barrel geometry, metres ---------------------------------------------
@@ -157,21 +158,25 @@ def materials():
 
     im, nodes, links = node_mat("SteelInside")
     bsdf = principled(nodes)
-    set_in(bsdf, "Base Color", (0.8, 0.8, 0.82, 1))
+    set_in(bsdf, "Base Color", (0.45, 0.45, 0.47, 1))  # reads dark through the smoky lid
     set_in(bsdf, "Metallic", 1.0)
     set_in(bsdf, "Roughness", 0.45)
 
+    # the real lid is thin, crystal-clear plastic with a faint blue cast
     lm, nodes, links = node_mat("Lid")
     bsdf = principled(nodes)
-    set_in(bsdf, "Base Color", (0.93, 0.95, 0.97, 1))
-    set_in(bsdf, "Roughness", 0.04)
+    set_in(bsdf, "Base Color", (0.85, 0.89, 0.96, 1))
+    set_in(bsdf, "Roughness", 0.03)
     set_in(bsdf, "IOR", 1.49)
     set_in(bsdf, "Transmission Weight", 1.0)
 
-    gm, nodes, links = node_mat("Grommet")
+    # the slider's milky-white frosted tab
+    gm, nodes, links = node_mat("Frost")
     bsdf = principled(nodes)
-    set_in(bsdf, "Base Color", (0.02, 0.02, 0.022, 1))
-    set_in(bsdf, "Roughness", 0.55)
+    set_in(bsdf, "Base Color", (0.95, 0.95, 0.95, 1))
+    set_in(bsdf, "Roughness", 0.4)
+    set_in(bsdf, "IOR", 1.49)
+    set_in(bsdf, "Transmission Weight", 0.6)
 
     # the unprinted white coating: same gloss as the print
     cm, nodes, links = node_mat("Coat")
@@ -197,20 +202,104 @@ def build_tumbler(pm, sm, im, lm, gm, cm):
     body = lathe("Barrel", prof, [pm, sm, im, cm],
                  uv_v=lambda z: min(max((z - PRINT_Z0) / PRINT_H, 0.003), 0.997))
 
-    # clear lid: an outer skirt over the lip and a flat top, solid for refraction
+    # clear slide lid, copied off close-ups of the real one: a thin crystal-clear
+    # moulded shell. A wide, flat rim (a hair wider than the barrel, ~6.5 mm
+    # tall) sits on the lip; inside it a steep wall drops into a deep well whose
+    # floor is 2 mm below the barrel's top, and carries on down as the plug.
     lz = LIP_Z
-    lid_prof = [(0.0, lz + 0.0085, 0), (0.024, lz + 0.0085, 0), (0.026, lz + 0.0072, 0),
-                (R - 0.0015, lz + 0.0072, 0)]
-    lid_prof += [(r, z, 0) for r, z in arc(R - 0.0015, lz + 0.0057, 0.0027, math.pi / 2, 0, 5)][1:]
-    lid_prof += [(R + 0.0012, lz - LID_OVERLAP, 0), (R + 0.0002, lz - LID_OVERLAP, 0),
-                 (R + 0.0002, lz + 0.0005, 0), (0.0261, lz + 0.006, 0), (0.0241, lz + 0.0073, 0),
-                 (0.0, lz + 0.0073, 0)]
+    t = 0.0012  # wall
+    ro = R + 0.0013  # outside of the rim
+    rwt, rw = ro - 0.0058, R - 0.0055  # well wall (inner face) at the top and at the floor
+    zt, zf, zb = lz + 0.0055, lz - 0.002, lz - 0.009  # rim top, well floor, plug bottom
+    lid_prof = [(0.0, zf, 0), (rw, zf, 0), (rwt, zt - 0.0012, 0), (rwt + 0.0003, zt - 0.0005, 0),
+                (rwt + 0.001, zt - 0.0001, 0), (ro - 0.003, zt, 0)]
+    lid_prof += [(r, z, 0) for r, z in arc(ro - 0.0015, zt - 0.0015, 0.0015, math.pi / 2, 0, 6)][1:]
+    lid_prof += [(ro, lz - LID_OVERLAP, 0), (ro - t, lz - LID_OVERLAP, 0), (ro - t, zt - t - 0.0003, 0),
+                 (ro - 0.0025, zt - t, 0), (rwt + t + 0.0004, zt - t, 0), (rwt + t, zt - t - 0.0005, 0),
+                 (rw + t, zb, 0), (rw, zb, 0), (rw, zf - t, 0), (0.0, zf - t, 0)]
     # walked bottom-up like the barrel so the faces point outward
     lid = lathe("Lid", lid_prof[::-1], [lm])
 
-    # brushed straw, tilted, through a silicone grommet
+    def prism(name, pts, z0, z1, mat, hole=None):
+        """An outline (counter-clockwise, x/y) extruded from z0 to z1, optionally with a
+        hole (same number of points), edges softened."""
+        me = bpy.data.meshes.new(name)
+        bm = bmesh.new()
+        lo = [bm.verts.new((x, y, z0)) for x, y in pts]
+        hi = [bm.verts.new((x, y, z1)) for x, y in pts]
+        n = len(pts)
+        if hole:
+            hlo = [bm.verts.new((x, y, z0)) for x, y in hole]
+            hhi = [bm.verts.new((x, y, z1)) for x, y in hole]
+        else:
+            bm.faces.new(lo[::-1])
+            bm.faces.new(hi)
+        for i in range(n):
+            j = (i + 1) % n
+            bm.faces.new((lo[i], lo[j], hi[j], hi[i])).smooth = True
+            if hole:
+                bm.faces.new((hi[i], hi[j], hhi[j], hhi[i]))
+                bm.faces.new((lo[i], hlo[i], hlo[j], lo[j]))
+                bm.faces.new((hlo[j], hlo[i], hhi[i], hhi[j])).smooth = True
+        bm.to_mesh(me)
+        bm.free()
+        o = bpy.data.objects.new(name, me)
+        bpy.context.collection.objects.link(o)
+        me.materials.append(mat)
+        bev = o.modifiers.new("Bevel", "BEVEL")
+        bev.width, bev.segments, bev.limit_method = min(0.0004, (z1 - z0) / 3), 3, "ANGLE"
+        return o
+
+    def rounded(x0, x1, y0, y1, rc, n=8):
+        cs = [(x1 - rc, y0 + rc, -90), (x1 - rc, y1 - rc, 0), (x0 + rc, y1 - rc, 90), (x0 + rc, y0 + rc, 180)]
+        return [(cx + rc * math.cos(math.radians(a + 90 * i / n)), cy + rc * math.sin(math.radians(a + 90 * i / n)))
+                for cx, cy, a in cs for i in range(n + 1)]
+
+    # the slide, laid along +x with the straw end at the rim: a raised clear
+    # track almost across the well; in it a clear sliding plate carrying a tall
+    # clear body (narrow by the button, full width by the tab), a clear domed
+    # button with a white dot at the inner end and the big milky grip tab, with
+    # the drinking opening (and the straw) at the rim end
+    e = 0.00005  # keep touching clear parts from sharing a face
+    pz = zf + 0.001  # top of the sliding plate
+    bz = pz + 0.0028  # top of the slide's body
+    a, w = math.radians(145), math.radians(38)  # the pull tab: a flat lip out of the rim
+    lip = [a - w + 2 * w * i / 24 for i in range(25)]
+    flange = [((ro + 0.006 * (1 - ((u - a) / w) ** 2)) * math.cos(u), (ro + 0.006 * (1 - ((u - a) / w) ** 2)) * math.sin(u))
+              for u in lip]
+    flange += [((ro - 0.002) * math.cos(u), (ro - 0.002) * math.sin(u)) for u in lip[::-1]]
+    parts = [
+        prism("Track", rounded(-0.0285, 0.0285, -0.0095, 0.0095, 0.0094, 12), zf + e, zf + 0.002, lm,
+              hole=rounded(-0.0274, 0.0274, -0.0084, 0.0084, 0.0083, 12)),
+        prism("Plate", rounded(-0.0268, 0.0155, -0.0081, 0.0081, 0.008, 12), zf + e, pz, lm),
+        prism("Body", [(-0.021, -0.0045), (-0.012, -0.0045), (-0.008, -0.0075), (0.004, -0.0075),
+                       (0.004, 0.0075), (-0.008, 0.0075), (-0.012, 0.0045), (-0.021, 0.0045)], pz + e, bz, lm),
+        prism("Tab", rounded(0.004, 0.0155, -0.0068, 0.0068, 0.0035), pz + e, bz + 0.0012, gm),
+        prism("Grip1", rounded(0.0081, 0.0088, -0.0038, 0.0038, 0.00034, 4), bz + 0.0012, bz + 0.0015, gm),
+        prism("Grip2", rounded(0.0107, 0.0114, -0.0038, 0.0038, 0.00034, 4), bz + 0.0012, bz + 0.0015, gm),
+        prism("Button", rounded(-0.0271, -0.0199, -0.0036, 0.0036, 0.0035, 6), pz + e, bz + 0.0006, lm),
+        prism("Dot", rounded(-0.0255, -0.0215, -0.002, 0.002, 0.0019, 6), bz + 0.0006, bz + 0.0011, gm),
+        prism("PullTab", flange, zt - 0.0016, zt - 0.0002, lm),
+    ]
+    straw_x = 0.0205  # where the straw comes up through the opening
+
+    # the rubber seal round the plug shows through the clear rim as a dark circle
+    seal, nodes, links = node_mat("Seal")
+    bsdf = principled(nodes)
+    set_in(bsdf, "Base Color", (0.012, 0.016, 0.03, 1))
+    set_in(bsdf, "Roughness", 0.4)
+    bpy.ops.mesh.primitive_torus_add(major_radius=R - 0.0036, minor_radius=0.0007,
+                                     major_segments=128, minor_segments=12, location=(0, 0, lz - 0.004))
+    ring = bpy.context.active_object
+    ring.name = "Seal"
+    ring.data.materials.append(seal)
+    for p in ring.data.polygons:
+        p.use_smooth = True
+    parts.append(ring)
+
+    # brushed straw, tilted outward, up through the opening at the slide's rim end
     tilt = math.radians(7)
-    base = Vector((0.012, 0.004, 0.02))
+    base = Vector((straw_x - math.tan(tilt) * (zf - 0.02), 0.0, 0.02))
     length = 0.27
     bpy.ops.mesh.primitive_cylinder_add(vertices=48, radius=0.0031, depth=length)
     straw = bpy.context.active_object
@@ -220,21 +309,38 @@ def build_tumbler(pm, sm, im, lm, gm, cm):
     straw.data.materials.append(sm)
     for p in straw.data.polygons:
         p.use_smooth = True
-    at_lid = (lz + 0.0085 - base.z) / math.cos(tilt)
-    gx = base.x + math.sin(tilt) * at_lid
-    bpy.ops.mesh.primitive_torus_add(major_radius=0.0042, minor_radius=0.0013,
-                                     major_segments=48, minor_segments=12,
-                                     location=(gx, base.y, lz + 0.0088))
-    grom = bpy.context.active_object
-    grom.data.materials.append(gm)
-    for p in grom.data.polygons:
-        p.use_smooth = True
+
+    lid_reflectors([lid, *parts])
 
     rig = bpy.data.objects.new("Tumbler", None)
     bpy.context.collection.objects.link(rig)
-    for o in (body, lid, straw, grom):
+    for o in (body, lid, straw, *parts):
         o.parent = rig
     return rig
+
+
+def lid_reflectors(receivers):
+    """Soft white cards only the lid can see. In a black studio clear plastic
+    reflects nothing but black and reads as dark glass; the real lid, in a room,
+    shines. Light linking keeps the cards off the barrel, straw and set."""
+    coll = bpy.data.collections.new("LidOnly")
+    for o in receivers:
+        coll.objects.link(o)
+    for name, size, loc, power in [("CardBack", (0.9, 0.35), (0, 0.45, 0.34), 1.6),
+                                   ("CardTop", (0.6, 0.6), (0, -0.05, 0.62), 0.4)]:
+        mat, nodes, links = node_mat(name)
+        bsdf = principled(nodes)
+        set_in(bsdf, "Base Color", (0, 0, 0, 1))
+        set_in(bsdf, "Emission Color", (1, 1, 1, 1))
+        set_in(bsdf, "Emission Strength", power)
+        bpy.ops.mesh.primitive_plane_add(size=1, location=loc)
+        c = bpy.context.active_object
+        c.name = name
+        c.scale = (size[0], size[1], 1)
+        c.rotation_euler = (Vector((0, 0, LIP_Z)) - Vector(loc)).to_track_quat("Z", "Y").to_euler()
+        c.data.materials.append(mat)
+        c.visible_camera = c.visible_diffuse = c.visible_shadow = False
+        c.light_linking.receiver_collection = coll
 
 
 def build_set():
@@ -346,8 +452,8 @@ def setup_render(samples):
         sc.cycles.denoiser = "OPENIMAGEDENOISE"
     except Exception:
         pass
-    sc.cycles.max_bounces = 6
-    sc.cycles.transmission_bounces = 6
+    sc.cycles.max_bounces = 12
+    sc.cycles.transmission_bounces = 12  # thin clear lid: light crosses several walls
     sc.cycles.glossy_bounces = 3
     sc.cycles.diffuse_bounces = 2
     sc.cycles.caustics_reflective = False
@@ -485,6 +591,7 @@ def masks(rig, slugs, cam, out, scale):
         bpy.ops.render.render(write_still=True)
         print(f"  mask/{slug}.png", flush=True)
     vl.material_override = None
+    sc.cycles.use_denoising = True  # the line-up renders after the cut-outs
     sc.render.film_transparent = False
     for o in hidden:
         o.hide_render = False
@@ -498,6 +605,7 @@ def lineup(rig, tex, glow, out, scale, q):
         o.hide_render = True
     n = len(DESIGNS)
     dist = 1.15
+    lid_only = bpy.data.collections["LidOnly"]
     for i, (slug, (wrap, u0, _)) in enumerate(DESIGNS.items()):
         copy = rig.copy()
         bpy.context.collection.objects.link(copy)
@@ -513,6 +621,8 @@ def lineup(rig, tex, glow, out, scale, q):
             c.hide_render = False
             c.parent = copy
             bpy.context.collection.objects.link(c)
+            if child.name in lid_only.objects:  # copies of the lid see the lid's reflector cards too
+                lid_only.objects.link(c)
         x = (i - (n - 1) / 2) * 0.105
         copy.location = (x, 0.25 * x * x, 0)
         copy.rotation_euler = (0, 0, -2 * math.pi * u0 - math.atan2(x, dist))
