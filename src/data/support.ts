@@ -303,6 +303,10 @@ export const supportPages: SupportPage[] = [
             a: "There is only one: 20 oz, about 591 ml. It covers a commute, a session or a morning at a desk without a refill. We would rather make one size properly than three badly.",
           },
           {
+            q: "Is the whole tumbler printed?",
+            a: "Almost. The design goes all the way round the barrel, but the printing press can't reach the very top and bottom, so every TINVO tumbler has a slim white band, about 5 mm, under the lid and at the base. On the three liquid-foil designs you'll also find a fine vertical line at the back, where the two ends of the print meet. Both come from how tumblers are sublimation-printed, so they aren't defects, and our product photos show them as they really are.",
+          },
+          {
             q: "Will the print wear off?",
             a: "The artwork is sublimated into the coating rather than stuck on top, with fade-proof OEKO-TEX inks. Hand wash it and it stays put. We still keep it out of the dishwasher.",
           },

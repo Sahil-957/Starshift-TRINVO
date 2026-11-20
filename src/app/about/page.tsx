@@ -15,7 +15,7 @@ const chapters = [
   },
   {
     heading: "The artwork is the product",
-    body: "Most tumblers are sold on a colour chart: three finishes, because three is what fits on a pallet. We treat the surface as the actual design work — every piece in the range is a finished TINVO design, printed edge to edge, not a blank in one of three finishes.",
+    body: "Most tumblers are sold on a colour chart: three finishes, because three is what fits on a pallet. We treat the surface as the actual design work — every piece in the range is a finished TINVO design, printed all the way round, not a blank in one of three finishes.",
   },
   {
     heading: "Finished pieces, not blanks",

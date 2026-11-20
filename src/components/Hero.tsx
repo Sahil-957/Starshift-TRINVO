@@ -9,7 +9,7 @@ import { barrel, formatPrice, products } from "@/data/products";
 const callouts = [
   { y: 21, x: 53, title: "Reusable metal straw", body: "Brushed steel, in the box" },
   { y: 33, x: 64.5, title: "Splash-proof lid", body: "Clear, snug over the rim" },
-  { y: 52, x: 63, title: "Full-wrap print", body: "Edge to edge, all the way round" },
+  { y: 52, x: 63, title: "Full-wrap print", body: "All the way round the barrel" },
   { y: 83, x: 63, title: "304 stainless steel", body: `Double-wall · ${barrel.capacity}` },
 ];
 
@@ -98,7 +98,7 @@ export default function Hero() {
           <div className="order-3">
           <p className="mt-7 max-w-md text-[16px] leading-relaxed text-ash">
             304 stainless, double-wall insulated, a splash-proof lid and a metal
-            straw in the box, with the design printed edge to edge. Not just
+            straw in the box, with the design printed all the way round. Not just
             another tumbler.
           </p>
 

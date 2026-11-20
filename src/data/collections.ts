@@ -32,7 +32,7 @@ export const collections: Collection[] = [
     slug: "solid",
     label: "Solid colour",
     title: "Solid colours",
-    lede: "One colour, edge to edge, and the TINVO mark. From deep navy and cocoa to cream and powder blue — quiet enough for every day.",
+    lede: "One colour all the way round, and the TINVO mark. From deep navy and cocoa to cream and powder blue — quiet enough for every day.",
     group: "Character",
     accent: "var(--color-bronze)",
     match: hasTrait("minimal"),

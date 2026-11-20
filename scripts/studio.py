@@ -45,11 +45,16 @@ DESIGNS = {
 }
 
 # --- barrel geometry, metres ---------------------------------------------
+# Measured on a real Qikink-printed tumbler (Nov 2026): the barrel is white-coated
+# and their press can't print the ends, so a white band shows under the lid
+# (~4.5 mm) and at the base (~6 mm, including the rounded edge).
 R = 0.0375  # outer radius (75 mm barrel)
-PRINT_Z0 = 0.006  # print starts above the rounded base
+PRINT_Z0 = 0.006  # print starts above the rounded base: white below
 # the wrap is exactly one turn, so print height follows its aspect
 PRINT_H = 2 * math.pi * R * 4000 / 4650
-LIP_Z = PRINT_Z0 + PRINT_H + 0.003
+TOP_BAND = 0.0045  # white between the print and the lid
+LID_OVERLAP = 0.001  # the lid's rim sits just over the top of the barrel
+LIP_Z = PRINT_Z0 + PRINT_H + TOP_BAND + LID_OVERLAP
 SEG = 256
 
 
@@ -167,17 +172,29 @@ def materials():
     bsdf = principled(nodes)
     set_in(bsdf, "Base Color", (0.02, 0.02, 0.022, 1))
     set_in(bsdf, "Roughness", 0.55)
-    return pm, sm, im, lm, gm, tex
+
+    # the unprinted white coating: same gloss as the print
+    cm, nodes, links = node_mat("Coat")
+    bsdf = principled(nodes)
+    set_in(bsdf, "Base Color", (0.86, 0.86, 0.85, 1))
+    set_in(bsdf, "Roughness", 0.32)
+    set_in(bsdf, "Coat Weight", 1.0)
+    set_in(bsdf, "Coat Roughness", 0.07)
+    set_in(bsdf, "Coat IOR", 1.5)
+    set_in(bsdf, "Specular IOR Level", 0.5)
+    return pm, sm, im, lm, gm, cm, tex
 
 
-def build_tumbler(pm, sm, im, lm, gm):
-    # outer skin: rounded base -> printed wall -> steel lip -> inner wall
-    prof = [(0.0, 0.0012, 0), (R - 0.009, 0.0, 0)]
-    prof += [(r, z, 0) for r, z in arc(R - 0.0045, 0.0045, 0.0045, -math.pi / 2, 0, 8)][1:]
-    prof += [(R, PRINT_Z0, 0), (R, PRINT_Z0 + PRINT_H, 1), (R, LIP_Z - 0.0012, 1)]
-    prof += [(r, z, 1) for r, z in arc(R - 0.0012, LIP_Z - 0.0012, 0.0012, 0, math.pi / 2, 4)][1:]
+def build_tumbler(pm, sm, im, lm, gm, cm):
+    # outer skin: steel disc under the base -> white base and band -> printed
+    # wall -> white band -> white lip -> steel inner wall.  Materials: 0 print,
+    # 1 steel, 2 inside steel, 3 white coat
+    prof = [(0.0, 0.0012, 1), (0.011, 0.0011, 3), (R - 0.009, 0.0, 3)]
+    prof += [(r, z, 3) for r, z in arc(R - 0.0045, 0.0045, 0.0045, -math.pi / 2, 0, 8)][1:]
+    prof += [(R, PRINT_Z0, 0), (R, PRINT_Z0 + PRINT_H, 3), (R, LIP_Z - 0.0012, 3)]
+    prof += [(r, z, 3) for r, z in arc(R - 0.0012, LIP_Z - 0.0012, 0.0012, 0, math.pi / 2, 4)][1:]
     prof += [(R - 0.0025, LIP_Z, 2), (R - 0.0028, LIP_Z - 0.004, 2), (R - 0.0028, 0.012, 2), (0.0, 0.012, 2)]
-    body = lathe("Barrel", prof, [pm, sm, im],
+    body = lathe("Barrel", prof, [pm, sm, im, cm],
                  uv_v=lambda z: min(max((z - PRINT_Z0) / PRINT_H, 0.003), 0.997))
 
     # clear lid: an outer skirt over the lip and a flat top, solid for refraction
@@ -185,7 +202,7 @@ def build_tumbler(pm, sm, im, lm, gm):
     lid_prof = [(0.0, lz + 0.0085, 0), (0.024, lz + 0.0085, 0), (0.026, lz + 0.0072, 0),
                 (R - 0.0015, lz + 0.0072, 0)]
     lid_prof += [(r, z, 0) for r, z in arc(R - 0.0015, lz + 0.0057, 0.0027, math.pi / 2, 0, 5)][1:]
-    lid_prof += [(R + 0.0012, lz - 0.0095, 0), (R + 0.0002, lz - 0.0095, 0),
+    lid_prof += [(R + 0.0012, lz - LID_OVERLAP, 0), (R + 0.0002, lz - LID_OVERLAP, 0),
                  (R + 0.0002, lz + 0.0005, 0), (0.0261, lz + 0.006, 0), (0.0241, lz + 0.0073, 0),
                  (0.0, lz + 0.0073, 0)]
     # walked bottom-up like the barrel so the faces point outward
@@ -397,8 +414,8 @@ def main():
     setup_render(128)
     world()
     glow = build_set()
-    pm, sm, im, lm, gm, tex = materials()
-    rig = build_tumbler(pm, sm, im, lm, gm)
+    pm, sm, im, lm, gm, cm, tex = materials()
+    rig = build_tumbler(pm, sm, im, lm, gm, cm)
 
     hero_cam = camera((0, -1.3, 0.22), (0, 0, 0.15), 85)
     detail_cam = camera((-0.16, -0.7, 0.42), (0.004, 0, 0.165), 85, fstop=8.0, focus=0.76)

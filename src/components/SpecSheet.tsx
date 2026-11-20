@@ -20,6 +20,7 @@ const groups: { title: string; rows: [string, string][] }[] = [
       ["Lid", "Splash-proof, push-on"],
       ["Straw", "Reusable metal, included"],
       ["Surface", "Sublimation, full wrap"],
+      ["Print area", "All the way round; a slim white band stays under the lid and at the base"],
       ["Inks", "OEKO-TEX certified, fade-proof"],
     ],
   },

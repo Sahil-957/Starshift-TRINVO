@@ -6,8 +6,10 @@
  *
  * IMAGES: `-hero`, `-detail` and the 24 turntable frames in `spin/` are
  * ray-traced studio renders made from the print-ready wrap files by
- * `scripts/studio.py` (Blender). `-lifestyle` is Qikink's own mockup.
- * Re-run the script after changing any wrap file.
+ * `scripts/studio.py` (Blender). `-lifestyle` is Qikink's own mockup with the
+ * unprinted white bands painted in by `scripts/lifestyle-bands.py`.
+ * `-photo-N` are unretouched photos of a delivered tumbler.
+ * Re-run the scripts after changing any wrap file.
  */
 import synced from "./catalogue.json" with { type: "json" };
 
@@ -17,8 +19,8 @@ export type ProductImage = {
   file: string;
   /** What the shot shows — used as alt text */
   alt: string;
-  /** Shot type; the first entry in `images` is the lead shot */
-  kind: "main" | "angle" | "detail" | "lifestyle";
+  /** Shot type; the first entry in `images` is the lead shot. "photo" is a real, unretouched photo */
+  kind: "main" | "angle" | "detail" | "lifestyle" | "photo";
 };
 
 /**
@@ -84,7 +86,7 @@ const baseProducts: Product[] = [
     name: "Aurora Gilt",
     tagline: "Liquid gold through an oil-slick spectrum",
     description:
-      "Molten gold folding into violet, teal and ice blue, printed edge to edge so the colour keeps moving as you turn it. The richest design in the range.",
+      "Molten gold folding into violet, teal and ice blue, printed all the way round so the colour keeps moving as you turn it. The richest design in the range.",
     price: 1490,
     finish: "Liquid foil",
     images: shots("aurora-gilt", "Aurora Gilt"),
@@ -102,7 +104,12 @@ const baseProducts: Product[] = [
       "Waves of liquid silver with a cyan and lilac sheen running through the folds. Reads like brushed metal from across a room and like a hologram up close.",
     price: 1490,
     finish: "Liquid foil",
-    images: shots("chroma-tide", "Chroma Tide"),
+    images: [
+      ...shots("chroma-tide", "Chroma Tide"),
+      { file: "chroma-tide-photo-1.webp", alt: "Real photo: a delivered Chroma Tide tumbler standing by a wall", kind: "photo" },
+      { file: "chroma-tide-photo-2.webp", alt: "Real photo: the Chroma Tide print and logo up close", kind: "photo" },
+      { file: "chroma-tide-photo-3.webp", alt: "Real photo: the clear slide lid and metal straw from above", kind: "photo" },
+    ],
     tone: "#a9c4d8",
     accent: "#9fc6dd",
     palette: ["#5d6b80", "#c7d3de", "#7fd6e6"],

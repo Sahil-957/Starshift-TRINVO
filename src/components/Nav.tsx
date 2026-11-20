@@ -349,7 +349,7 @@ export default function Nav({ checkout = false }: { checkout?: boolean }) {
                   [
                     "Solid colour",
                     solid,
-                    "One colour edge to edge, and the mark",
+                    "One colour all the way round, and the mark",
                   ],
                 ].map(([title, list, note]) => (
                   <section key={title as string}>
